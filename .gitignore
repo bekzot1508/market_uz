@@ -1,0 +1,39 @@
+# === Python / Django asosiy fayllar ===
+__pycache__/
+*.py[cod]
+*$py.class
+
+# === Environment va maxfiy fayllar ===
+.env
+*.env
+venv/
+.env.bak
+*.log
+
+# === Statik va media fayllar (collectstatic yoki uploadlar) ===
+static/
+staticfiles/
+media/
+
+# === IDE (PyCharm) fayllari ===
+.idea/
+*.iml
+
+# === Operatsion tizim fayllari ===
+.DS_Store
+Thumbs.db
+
+# === Pipenv yoki boshqa dependency fayllar ===
+Pipfile.lock
+
+# === Test natijalari ===
+.coverage
+.pytest_cache/
+htmlcov/
+
+# === Migratsiyalar (ba’zan vaqtincha ignore qilinadi, lekin ixtiyoriy) ===
+# */migrations/__pycache__/
+# */migrations/*.py
+
+# === Lokal sozlamalar (ixtiyoriy) ===
+*.sqlite3   # faqat agar keyin test uchun SQLite qo‘llasang
