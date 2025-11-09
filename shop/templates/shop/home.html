@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load cart_extras %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+  <h1>Mahsulotlar</h1>
+
+  <div class="row">
+    <div class="col-md-3">
+      <!-- side categories panel -->
+    </div>
+    <div class="col-md-9">
+      <div class="row">
+        {% for product in products %}
+          <div class="col-md-4 mb-3">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title"><a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a></h5>
+                <p class="card-text">{{ product.get_discounted_price }} $</p>
+
+                <!-- product id bo'yicha savatdagi miqdor -->
+                {% with qty=request.session.cart|get_item:product.id %}
+                  {% if qty and qty > 0 %}
+                    <p class="text-success">Savatda: {{ qty }}</p>
+                  {% endif %}
+                {% endwith %}
+
+                <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary">Savatga qo‘shish</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

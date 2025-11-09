@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %} Detail {% endblock %}
+
+{% block content %}
+
+    <h2>{{ product.name }}</h2>
+    <p>{{ product.description }}</p>
+    <p>Price: {{ product.get_discounted_price }} $</p>
+
+    {% for key, value in product.extra_data.items %}
+        <p><strong>{{ key|capfirst }}:</strong> {{ value }}</p>
+    {% endfor %}
+
+    <p>⭐ {{ product.average_rating }} ({{ product.review_count }} reviews)</p>
+
+    <a href="{% url 'add_to_cart' product.id %}">Add to cart</a>
+
+{% endblock %}

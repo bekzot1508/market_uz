@@ -13,6 +13,7 @@ django-allauth = "*"
 gunicorn = "*"
 requests = "*"
 python-dotenv = "*"
+django-jsoneditor = "*"
 
 [dev-packages]
 
