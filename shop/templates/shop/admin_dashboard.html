@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load product_extras %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">🛍️ Buyurtmalar boshqaruvi</h2>
+        <form method="get" class="d-flex gap-2">
+          <input type="text" name="q" placeholder="Foydalanuvchi yoki ID..." value="{{ query }}" class="form-control">
+          <select name="status" class="form-select">
+            <option value="">Barchasi</option>
+            {% for value, label in orders.model.STATUS_CHOICES %}
+              <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-primary" type="submit">🔍 Qidirish</button>
+        </form>
+      </div>
+
+      {% if orders %}
+      <div class="table-responsive shadow-sm rounded-3">
+        <table class="table align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Foydalanuvchi</th>
+              <th>Mahsulotlar</th>
+              <th>Jami narx</th>
+              <th>Status</th>
+              <th>O‘zgartirish</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+            <tr class="{% if order.status == 'pending' %}table-warning{% elif order.status == 'confirmed' %}table-info{% elif order.status == 'shipped' %}table-primary{% elif order.status == 'delivered' %}table-success{% endif %}">
+              <td>#{{ order.id }}</td>
+              <td>{{ order.user.username }}</td>
+              <td>
+                  {% for key, value in order.items.items %}
+                    {% with product=key|to_int|get_product %}
+                      {% if product %}
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                          <a href="{% url 'shop:product_detail' product.slug %}" target="_blank">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; margin-right: 8px;">
+                          </a>
+                          <div>
+                            <a href="{% url 'shop:product_detail' product.slug %}"
+                               target="_blank"
+                               style="font-weight: 600; text-decoration: none; color: #333;">
+                              {{ product.name }}
+                            </a>
+                            <p class="mb-0 small">Soni: {{ value }}</p>
+                          </div>
+                        </div>
+                      {% else %}
+                        <p class="mb-0 text-danger">❌ Mahsulot topilmadi (ID: {{ key }})</p>
+                      {% endif %}
+                    {% endwith %}
+                  {% endfor %}
+              </td>
+              <td><strong>{{ order.total_price }}</strong> $</td>
+              <td>{{ order.get_status_display }}</td>
+              <td>
+                <form action="{% url 'shop:update_order_status' order.id %}" method="post" class="d-flex gap-2">
+                  {% csrf_token %}
+                  <select name="status" class="form-select form-select-sm w-auto">
+                    {% for value, label in order.STATUS_CHOICES %}
+                      <option value="{{ value }}" {% if value == order.status %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                  <button class="btn btn-sm btn-outline-success">💾 Saqlash</button>
+                </form>
+              </td>
+              <td>{{ order.created_at |date:"d.m.Y, H:i" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <div class="alert alert-secondary mt-4">Hech qanday buyurtma topilmadi.</div>
+      {% endif %}
+    </div>
+{% endblock %}

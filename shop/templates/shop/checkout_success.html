@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %} order {% endblock %}
+
+{% block content %}
+<h2>Buyurtma muvaffaqiyatli yaratildi!</h2>
+<p>Buyurtma raqami: <strong>#{{ order.id }}</strong></p>
+<p>Jami summa: <strong>{{ order.total_price }} $</strong></p>
+<p>Status: {{ order.get_status_display }}</p>
+
+<a href="{% url 'home' %}" class="btn btn-primary mt-3">Asosiy sahifaga qaytish</a>
+{% endblock %}

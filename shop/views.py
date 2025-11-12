@@ -1,6 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
-from .models import Product, Category
+from .models import Product, Category, Order
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.http import require_POST
+
 
 
 # Create your views here.
@@ -61,6 +65,74 @@ def remove_from_cart(request, product_id):
         del cart[str(product_id)]
         request.session['cart'] = cart
     return redirect('shop:cart_view')
+
+
+
+@login_required
+def checkout(request):
+    cart = request.session.get('cart', {})
+    if not cart:
+        return render(request, 'shop/checkout.html', {'error': 'Savat bo‘sh!'})
+
+    products = Product.objects.filter(id__in=cart.keys())
+
+    total = 0
+    for product in products:
+        quantity = cart.get(str(product.id), 0)
+        total += product.get_discounted_price() * quantity
+
+    # Buyurtma yaratamiz
+    order = Order.objects.create(
+        user=request.user,
+        items=cart,
+        total_price=total
+    )
+
+    # Savatni tozalaymiz
+    request.session['cart'] = {}
+
+    return render(request, 'shop/checkout_success.html', {'order': order})
+
+
+
+
+
+@staff_member_required
+def admin_dashboard(request):
+    query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+
+    orders = Order.objects.all().order_by('-created_at')
+
+    # Filtrlash
+    if query:
+        orders = orders.filter(
+            Q(user__username__icontains=query) |
+            Q(id__icontains=query)
+        )
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+
+    context = {
+        'orders': orders,
+        'query': query,
+        'status_filter': status_filter,
+    }
+    return render(request, 'shop/admin_dashboard.html', context)
+
+
+@staff_member_required
+@require_POST
+def update_order_status(request, order_id):
+    order = Order.objects.get(id=order_id)
+    new_status = request.POST.get('status')
+    if new_status in dict(Order.STATUS_CHOICES):
+        order.status = new_status
+        order.save()
+    return redirect('shop:admin_dashboard')
+
+
+
 
 
 
