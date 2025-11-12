@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.views import View
 
-from user.forms import UserCreateForm
+from user.forms import UserCreateForm, UserUpdateForm
 
 
 # Create your views here.
@@ -23,7 +23,7 @@ class RegisterView(View):
         create_form = UserCreateForm(data=request.POST, files=request.FILES) # buni getdagisidan farqi userdan kelyotdan qiymatni dataga berib yuboramiz, data berish shart validatsiyaga  malumotlarimiz borishi va validatsiya bo'lishi uchun
 
         if create_form.is_valid():
-            # create user account
+            # create css account
             create_form.save()
             return redirect('user:login')
 
@@ -64,7 +64,22 @@ class LogoutView(LoginRequiredMixin, View):
 ################  Profile  ################
 class ProfileView(LoginRequiredMixin, View):
     def get(self, request):
-        # if not request.user.is_authenticated: ### LoginRequiredMixin ishlatganimiz uchun bu kod kerak emas
+        # if not request.css.is_authenticated: ### LoginRequiredMixin ishlatganimiz uchun bu kod kerak emas
         #     return redirect('users:login')
         return render(request,'user/profile.html', {"user": request.user})
 
+
+
+class ProfileUpdateView(LoginRequiredMixin, View):
+    def get(self, request):
+        user_update_form = UserUpdateForm(instance=request.user)
+        return render(request,'user/profile_edit.html', {'form': user_update_form})
+
+    def post(self, request):
+        user_update_form = UserUpdateForm(instance=request.user, data=request.POST, files=request.FILES) # bu 2 ta parametr qabul qiladi, 1chi qaysi userni change qilyotganimiz, 2chisi qaysi malumot(data)larni change qilyotganimiz
+
+        if user_update_form.is_valid():
+            user_update_form.save()
+            messages.success(request, 'You have been successfully updated your profile.')
+            return redirect('user:profile')
+        return render(request,'user/profile_edit.html', {'form': user_update_form})

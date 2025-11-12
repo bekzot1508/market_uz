@@ -5,13 +5,17 @@
 
 {% block content %}
     <div class=" image d-flex flex-column justify-content-center align-items-center">
-        <img src="{{ user.profile_picture.url }}"   class="profile_pic rounded" alt="profile picture" />
-        <span class="idd my-2">{{ user.username }}</span>
-        <span class="name">{{ user.first_name}} {{ user.last_name }}</span>
-        <span class="idd">{{ user.email }}</span>
+        <img src="{{ user.profile_picture.url }}"   class="profile_pic rounded" alt="profile picture"/>
+        <span class="idd my-2">Username: {{ user.username }}</span>
+        <span class="name">Name: {{ user.first_name}} {{ user.last_name }}</span>
+        <span class="idd">Viloyat: {{ user.state }}</span>
+        <span class="idd">Tuman: {{ user.region }}</span>
+        <span class="idd">Qishloq: {{ user.village }}</span>
+        <span class="idd">Ko'cha: {{ user.street }}</span>
+        <span class="idd">uy: {{ user.house }}</span>
 
         <div class=" d-flex mt-2">
-             <a class="btn btn-dark" href="">Profile edit</a>
+             <a class="btn btn-dark" href="{% url 'user:profile_edit' %}">Profile edit</a>
         </div>
         <div class=" px-2 rounded mt-4 date ">
             <span class="join">Joined {{ user.date_joined | date:"M d, Y"}}</span>
