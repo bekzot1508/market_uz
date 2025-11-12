@@ -21,7 +21,7 @@ def home(request):
     products = products.order_by('-average_rating', '-review_count', '-created_at')
     categories = Category.objects.filter(parent__isnull=True)
 
-    return render(request, 'shop/home.html', {
+    return render(request, 'home.html', {
         'products': products,
         'categories': categories,
         'query': query
@@ -52,7 +52,7 @@ def add_to_cart(request, product_id):
     cart = request.session.get('cart', {})
     cart[str(product_id)] = cart.get(str(product_id), 0) + 1
     request.session['cart'] = cart
-    return redirect('cart_view')
+    return redirect('shop:cart_view')
 
 
 def remove_from_cart(request, product_id):
@@ -60,4 +60,7 @@ def remove_from_cart(request, product_id):
     if str(product_id) in cart:
         del cart[str(product_id)]
         request.session['cart'] = cart
-    return redirect('cart_view')
+    return redirect('shop:cart_view')
+
+
+

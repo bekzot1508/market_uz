@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+
+{% block title %} register page {% endblock title %}
+
+{% block content %}
+    <h3>Register</h3>
+
+    <div class="row">
+        <div class="col-4">
+            <form action="{% url 'user:register' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %} <!-- formada post so'rov yborganimizda {% csrf_token %} yozishimiz kerak, aks holda xato beradi2-->
+                 {{ form | crispy }}
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

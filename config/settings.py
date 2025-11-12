@@ -28,10 +28,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # 3rd-party applar
+    'crispy_forms',
+    'crispy_bootstrap5',
+
+
     # Local apps
-    # 'user',
+    'user',
     'shop',
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -110,7 +117,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-# AUTH_USER_MODEL = 'user.CustomUser'
+AUTH_USER_MODEL = 'user.CustomUser'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -125,7 +132,15 @@ STATICFILES_DIRS = [
     BASE_DIR / 'shop' / 'static',
 ]
 
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = 'login'  # login_requared dekarator login sahifasiga yuboradi

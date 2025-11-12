@@ -11,12 +11,10 @@
   {% if products %}
     {% for product in products %}
       <p>{{ product.name }} — {{ cart|get_item:product.id }} x {{ product.get_discounted_price }} $</p>
-      <a class="btn btn-info" href="{% url 'remove_from_cart' product.id %}">Remove</a>
+      <a class="btn btn-info" href="{% url 'shop:remove_from_cart' product.id %}">Remove</a>
     {% endfor %}
     <hr>
     <h3>Total: {{ total }} $</h3>
-  {% else %}
-    <p>Your cart is empty</p>
   {% endif %}
 
 {% endblock %}
