@@ -113,7 +113,8 @@ USE_TZ = True
 # AUTH_USER_MODEL = 'user.CustomUser'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = 'media-files'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 
 # Static files (CSS, JavaScript, Images)

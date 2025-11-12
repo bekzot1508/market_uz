@@ -3,17 +3,21 @@
 {% block title %} Detail {% endblock %}
 
 {% block content %}
+    <div class="product-detail">
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:300px; height:300px; object-fit:contain;">
+        {% endif %}
+        <h2>{{ product.name }}</h2>
+        <p>{{ product.description }}</p>
+        <p><strong>Price:</strong> ${{ product.get_discounted_price }}</p>
 
-    <h2>{{ product.name }}</h2>
-    <p>{{ product.description }}</p>
-    <p>Price: {{ product.get_discounted_price }} $</p>
+        {% for key, value in product.extra_data.items %}
+            <p><strong>{{ key|capfirst }}:</strong> {{ value }}</p>
+        {% endfor %}
 
-    {% for key, value in product.extra_data.items %}
-        <p><strong>{{ key|capfirst }}:</strong> {{ value }}</p>
-    {% endfor %}
+        <p>⭐ {{ product.average_rating }} ({{ product.review_count }} reviews)</p>
 
-    <p>⭐ {{ product.average_rating }} ({{ product.review_count }} reviews)</p>
-
-    <a href="{% url 'add_to_cart' product.id %}">Add to cart</a>
+        <a href="{% url 'add_to_cart' product.id %}">Add to cart</a>
+    </div>
 
 {% endblock %}

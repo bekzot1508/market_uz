@@ -16,7 +16,8 @@
           <div class="col-md-4 mb-3">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title"><a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a></h5>
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:150px; height:150px; object-fit:cover;">
+                <h5 class="card-title"><a href="{% url 'product_detail' product.slug %}">{{ product.name | truncatewords:10 }}</a></h5>
                 <p class="card-text">{{ product.get_discounted_price }} $</p>
 
                 <!-- product id bo'yicha savatdagi miqdor -->
