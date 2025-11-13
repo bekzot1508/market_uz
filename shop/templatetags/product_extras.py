@@ -28,3 +28,5 @@ def product_detail_url(product_id):
         return reverse('shop:product_detail', args=[product.id])
     except Product.DoesNotExist:
         return '#'
+
+

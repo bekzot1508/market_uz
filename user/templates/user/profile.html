@@ -17,6 +17,10 @@
         <div class=" d-flex mt-2">
              <a class="btn btn-dark" href="{% url 'user:profile_edit' %}">Profile edit</a>
         </div>
+        <a href="{% url 'shop:my_orders' %}" class="btn btn-outline-primary mt-3">
+          📦 My Orders
+        </a>
+
         <div class=" px-2 rounded mt-4 date ">
             <span class="join">Joined {{ user.date_joined | date:"M d, Y"}}</span>
         </div>

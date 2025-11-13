@@ -6,7 +6,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
 
 
-
 # Create your views here.
 def home(request):
     query = request.GET.get('q', '')
@@ -51,13 +50,11 @@ def cart_view(request):
         'total': total
     })
 
-
 def add_to_cart(request, product_id):
     cart = request.session.get('cart', {})
     cart[str(product_id)] = cart.get(str(product_id), 0) + 1
     request.session['cart'] = cart
     return redirect('shop:cart_view')
-
 
 def remove_from_cart(request, product_id):
     cart = request.session.get('cart', {})
@@ -65,6 +62,7 @@ def remove_from_cart(request, product_id):
         del cart[str(product_id)]
         request.session['cart'] = cart
     return redirect('shop:cart_view')
+
 
 
 
@@ -96,7 +94,7 @@ def checkout(request):
 
 
 
-
+#############  Admin Dashboard  #############
 @staff_member_required
 def admin_dashboard(request):
     query = request.GET.get('q', '')
@@ -120,7 +118,6 @@ def admin_dashboard(request):
     }
     return render(request, 'shop/admin_dashboard.html', context)
 
-
 @staff_member_required
 @require_POST
 def update_order_status(request, order_id):
@@ -132,6 +129,18 @@ def update_order_status(request, order_id):
     return redirect('shop:admin_dashboard')
 
 
+
+
+#############  My Orders  #############
+@login_required
+def my_orders(request):
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'shop/my_orders.html', {'orders': orders})
+
+@login_required
+def checkout_success(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'shop/checkout_success.html', {'order': order})
 
 
 

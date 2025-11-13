@@ -1,12 +1,52 @@
 {% extends 'base.html' %}
+{% load product_extras %}
 
-{% block title %} order {% endblock %}
+{% block title %} Order Successful {% endblock %}
 
 {% block content %}
-<h2>Buyurtma muvaffaqiyatli yaratildi!</h2>
-<p>Buyurtma raqami: <strong>#{{ order.id }}</strong></p>
-<p>Jami summa: <strong>{{ order.total_price }} $</strong></p>
-<p>Status: {{ order.get_status_display }}</p>
+<div class="container mt-5">
+  <div class="card shadow p-4">
+    <h2 class="mb-3 text-success">✅ Order Successful!</h2>
+    <p class="lead">Your order <strong>#{{ order.id }}</strong> has been placed successfully.</p>
 
-<a href="{% url 'home' %}" class="btn btn-primary mt-3">Asosiy sahifaga qaytish</a>
+    <h4 class="mt-4">🛍️ Ordered Products</h4>
+    <hr>
+
+    {% for product_id, quantity in order.items.items %}
+      {% with product=product_id|get_product %}
+        {% if product %}
+          <div class="d-flex align-items-center mb-3">
+            <a href="{% url 'shop:product_detail' product.slug %}" class="d-flex align-items-center text-decoration-none text-dark">
+              <img src="{{ product.image.url }}" alt="{{ product.name }}" width="70" height="70" class="rounded me-3 border">
+              <div>
+                <h5 class="mb-1">{{ product.name }}</h5>
+                <p class="mb-0 small text-muted">Quantity: {{ quantity }}</p>
+                <p class="mb-0 small text-muted">Price: {{ product.get_discounted_price }} $</p>
+              </div>
+            </a>
+          </div>
+          <hr>
+        {% endif %}
+      {% endwith %}
+    {% endfor %}
+
+    <div class="mt-4">
+      <h5>Total Price: <strong>{{ order.total_price }} $</strong></h5>
+    </div>
+
+    <div class="mt-5 text-center">
+      <a href="{% url 'shop:cart_view' %}" class="btn btn-outline-primary">
+        🔙 Back to Cart
+      </a>
+      <a href="{% url 'shop:my_orders' %}" class="btn btn-outline-secondary">
+        🔙 Back to My Orders
+      </a>
+    </div>
+
+    <div class="mt-4">
+
+  </div>
+
+  </div>
+</div>
 {% endblock %}
