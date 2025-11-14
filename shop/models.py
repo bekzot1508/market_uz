@@ -62,6 +62,13 @@ class Order(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     items = models.JSONField(default=dict)  # Savatdagi mahsulotlar (id va miqdor)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # YANGI FIELDS — 2 bosqich uchun
+    full_name = models.CharField(max_length=100, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+    note = models.TextField(blank=True)
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 

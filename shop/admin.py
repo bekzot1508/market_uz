@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django import forms
-from .models import Product, Category
+from .models import Product, Category, Order
 import json
 
 
@@ -50,3 +50,26 @@ class ProductAdmin(admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'parent')
     search_fields = ('name',)
+
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('id', 'order_title', 'user', 'full_name', 'phone', 'total_price', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('id', 'user__username', 'full_name', 'phone', 'address')
+
+    def order_title(self, obj):
+        # Buyurtmadagi mahsulotlar nomini olish
+        items = []
+        for product_id, qty in obj.items.items():
+            try:
+                product = Product.objects.get(id=product_id)
+                items.append(f"{product.name} (x{qty})")
+            except Product.DoesNotExist:
+                items.append(f"Unknown product (ID: {product_id})")
+
+        items_str = ", ".join(items)
+
+        return f"Order #{obj.id} — {obj.user.username} — {items_str}"
+
+    order_title.short_description = "Order"

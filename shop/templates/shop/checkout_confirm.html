@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load cart_extras %}
+
+{% block title %} Order confirm {% endblock %}
+
+{% block content %}
+
+<h2>2. Buyurtmani tasdiqlash</h2>
+
+<div class="card p-4 shadow-sm">
+
+    <h4>🎯 Buyurtma ma’lumotlari</h4>
+    <p><b>Ism:</b> {{ address.full_name }}</p>
+    <p><b>Telefon:</b> {{ address.phone }}</p>
+    <p><b>Manzil:</b> {{ address.address }}</p>
+    {% if address.note %}
+        <p><b>Izoh:</b> {{ address.note }}</p>
+    {% endif %}
+
+    <hr>
+
+    <h4>🛒 Mahsulotlar</h4>
+
+    <ul>
+        {% for p in products %}
+            <li>
+                {{ p.name }} × {{ cart|get_item:p.id }} — {{ p.get_discounted_price }} so‘m
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h3 class="mt-3">Jami: <b>{{ total }} so‘m</b></h3>
+
+    <form method="post">
+        {% csrf_token %}
+        <button class="btn btn-success mt-3">✅ Buyurtmani tasdiqlash</button>
+    </form>
+
+    <a href="{% url 'shop:checkout_address' %}" class="btn btn-secondary mt-3">
+        ← Ortga
+    </a>
+
+</div>
+
+{% endblock %}

@@ -1,5 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
+
+from .forms import CheckoutAddressForm
 from .models import Product, Category, Order
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -66,11 +68,40 @@ def remove_from_cart(request, product_id):
 
 
 
+# @login_required
+# def checkout(request):
+#     cart = request.session.get('cart', {})
+#     if not cart:
+#         return render(request, 'shop/checkout.html', {'error': 'Savat bo‘sh!'})
+#
+#     products = Product.objects.filter(id__in=cart.keys())
+#
+#     total = 0
+#     for product in products:
+#         quantity = cart.get(str(product.id), 0)
+#         total += product.get_discounted_price() * quantity
+#
+#     # Buyurtma yaratamiz
+#     order = Order.objects.create(
+#         user=request.user,
+#         items=cart,
+#         total_price=total
+#     )
+#
+#     # Savatni tozalaymiz
+#     request.session['cart'] = {}
+#
+#     return render(request, 'shop/checkout_success.html', {'order': order})
+
 @login_required
 def checkout(request):
     cart = request.session.get('cart', {})
+
+    # ❗ Agar foydalanuvchi qayta kirsa (savat bo‘sh bo‘lsa)
     if not cart:
-        return render(request, 'shop/checkout.html', {'error': 'Savat bo‘sh!'})
+        return render(request, 'shop/checkout_blocked.html', {
+            'message': "Savat bo‘sh yoki siz allaqachon buyurtma bergansiz.",
+        })
 
     products = Product.objects.filter(id__in=cart.keys())
 
@@ -89,7 +120,65 @@ def checkout(request):
     # Savatni tozalaymiz
     request.session['cart'] = {}
 
-    return render(request, 'shop/checkout_success.html', {'order': order})
+    return redirect('shop:checkout_success', order_id=order.id)
+
+
+@login_required
+def checkout_address(request):
+    cart = request.session.get('cart', {})
+    if not cart:
+        return redirect('shop:cart_view')
+
+    if request.method == "POST":
+        form = CheckoutAddressForm(request.POST)
+        if form.is_valid():
+            request.session['checkout_address'] = form.cleaned_data
+            return redirect('shop:checkout_confirm')
+    else:
+        form = CheckoutAddressForm()
+
+    return render(request, 'shop/checkout_address.html', {"form": form})
+
+
+@login_required
+def checkout_confirm(request):
+    cart = request.session.get('cart', {})
+    address = request.session.get('checkout_address', {})
+
+    if not cart or not address:
+        return redirect('shop:checkout_address')
+
+    products = Product.objects.filter(id__in=cart.keys())
+
+    total = 0
+    for p in products:
+        total += p.get_discounted_price() * cart[str(p.id)]
+
+    if request.method == "POST":
+        # ORDER yaratamiz
+        order = Order.objects.create(
+            user=request.user,
+            items=cart,
+            total_price=total,
+            full_name=address['full_name'],
+            phone=address['phone'],
+            address=address['address'],
+            note=address.get('note', '')
+        )
+
+        # Cartni tozalaymiz
+        request.session['cart'] = {}
+        request.session['checkout_address'] = {}
+
+        return redirect('shop:checkout_success', order_id=order.id)
+
+    return render(request, 'shop/checkout_confirm.html', {
+        "products": products,
+        "cart": cart,
+        "address": address,
+        "total": total,
+    })
+
 
 
 

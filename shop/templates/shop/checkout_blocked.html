@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %} Checkout Blocked {% endblock %}
+
+{% block content %}
+    <div class="alert alert-warning mt-4">
+        ⚠️ {{ message }}
+    </div>
+
+    <a href="{% url 'home' %}" class="btn btn-primary mt-3">
+        🏠 Bosh sahifaga qaytish
+    </a>
+
+    <a href="{% url 'shop:my_orders' %}" class="btn btn-outline-success mt-3 ms-2">
+        📦 Buyurtmalarim
+    </a>
+{% endblock %}
