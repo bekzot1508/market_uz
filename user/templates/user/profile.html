@@ -7,12 +7,8 @@
     <div class=" image d-flex flex-column justify-content-center align-items-center">
         <img src="{{ user.profile_picture.url }}"   class="profile_pic rounded" alt="profile picture"/>
         <span class="idd my-2">Username: {{ user.username }}</span>
-        <span class="name">Name: {{ user.first_name}} {{ user.last_name }}</span>
-        <span class="idd">Viloyat: {{ user.state }}</span>
-        <span class="idd">Tuman: {{ user.region }}</span>
-        <span class="idd">Qishloq: {{ user.village }}</span>
-        <span class="idd">Ko'cha: {{ user.street }}</span>
-        <span class="idd">uy: {{ user.house }}</span>
+        <span class="name">{{ user.first_name}} {{ user.last_name }}</span>
+        <span class="name">{{ user.email}}</span>
 
         <div class=" d-flex mt-2">
              <a class="btn btn-dark" href="{% url 'user:profile_edit' %}">Profile edit</a>

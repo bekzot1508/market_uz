@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Products List{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Products</h2>
+    <a href="{% url 'admin_dashboard:product_create' %}" class="btn btn-success mb-3">Add New Product</a>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.category.name }}</td>
+                <td>${{ product.get_discounted_price }}</td>
+                <td>{{ product.stock }}</td>
+                <td>{{ product.is_active }}</td>
+                <td>
+                    <a href="{% url 'admin_dashboard:product_edit' product.id %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'admin_dashboard:product_delete' product.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No products found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
