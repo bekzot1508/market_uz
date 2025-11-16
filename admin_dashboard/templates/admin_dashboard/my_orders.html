@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Mening Buyurtmalarim{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Mening buyurtmalarim</h2>
+
+{% if orders %}
+    {% for order in orders %}
+    <div class="card mb-3 p-3">
+        <h4>Buyurtma #{{ order.id }}</h4>
+        <p>Status: <strong>{{ order.get_status_display }}</strong></p>
+        <p>Jami: <strong>{{ order.total_price }} $</strong></p>
+        <p>Sana: {{ order.created_at|date:"d.m.Y, H:i" }}</p>
+
+        <h5>Mahsulotlar:</h5>
+        {% for item in order.snapshots.all %}
+            <div style="display:flex; align-items:center; margin-bottom:8px; opacity: {% if item.product_id and not item.name %}0.5{% else %}1{% endif %}">
+                <img src="{{ item.image }}" width="60" style="border-radius:4px; margin-right:10px;">
+                <div>
+                    <p style="margin:0;">{{ item.name }}</p>
+                    <small>{{ item.quantity }} x {{ item.price }} $</small>
+                </div>
+            </div>
+        {% endfor %}
+
+        <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-secondary mt-2">To‘liq ko‘rish</a>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info">Sizda hech qanday buyurtma yo‘q.</div>
+{% endif %}
+{% endblock %}

@@ -1,9 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from shop.models import Product, Category, Order
+from shop.models import Product, Category, Order, OrderItemSnapshot
 from shop.forms import ProductForm
 from user.models import CustomUser
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Q
+from django.views.decorators.http import require_POST
+
+
+
+
+
 
 # Create your views here.
 # ================= Staff required =================
@@ -89,3 +98,55 @@ def product_delete(request, product_id):
 # def product_list(request):
 #     products = Product.objects.all()
 #     return render(request, 'admin_dashboard/products.html', {'products': products})
+
+
+
+@staff_member_required
+def admin_orders_list(request):
+    """Admin dashboard: orders list with search & status filter"""
+    query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+
+    orders = Order.objects.all().order_by('-created_at')
+
+    if query:
+        orders = orders.filter(
+            Q(user__username__icontains=query) |
+            Q(id__icontains=query)
+        )
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+
+    context = {
+        "orders": orders,
+        "query": query,
+        "status_filter": status_filter
+    }
+    return render(request, "admin_dashboard/orders_list.html", context)
+
+
+@staff_member_required
+@require_POST
+def admin_update_order_status(request, order_id):
+    """Update order status from admin panel"""
+    order = get_object_or_404(Order, id=order_id)
+    new_status = request.POST.get('status')
+
+    if new_status in dict(Order.STATUS_CHOICES):
+        order.status = new_status
+        order.save()
+
+    return redirect("admin_dashboard:orders_list")
+
+
+@staff_member_required
+def admin_order_detail(request, order_id):
+    """Order detail page for admin with snapshots"""
+    order = get_object_or_404(Order, id=order_id)
+    snapshots = order.snapshots.all()
+
+    return render(request, "admin_dashboard/order_detail.html", {
+        "order": order,
+        "snapshots": snapshots
+    })
+

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Admin Orders{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">🛍️ Buyurtmalar boshqaruvi</h2>
+
+    <form method="get" class="d-flex gap-2 mb-3">
+        <input type="text" name="q" placeholder="Foydalanuvchi, ID yoki ism..." value="{{ query }}" class="form-control">
+        <select name="status" class="form-select">
+            <option value="">Barchasi</option>
+            {% for value, label in orders.model.STATUS_CHOICES %}
+                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-primary">🔍 Qidirish</button>
+    </form>
+
+    {% if orders %}
+    <div class="table-responsive shadow-sm rounded-3">
+        <table class="table align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Foydalanuvchi</th>
+                    <th>Mahsulotlar</th>
+                    <th>Jami</th>
+                    <th>Status</th>
+                    <th>O‘zgartirish</th>
+                    <th>Sanasi</th>
+                    <th>To‘liq</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr class="{% if order.status == 'pending' %}table-warning{% elif order.status == 'confirmed' %}table-info{% elif order.status == 'shipped' %}table-primary{% elif order.status == 'delivered' %}table-success{% endif %}">
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.user.username }}</td>
+                    <td>
+                        {% for item in order.snapshots.all %}
+                        <div style="display:flex; align-items:center; margin-bottom:5px; opacity: {% if not item.name %}0.5{% else %}1{% endif %}">
+                            <img src="{{ item.image }}" width="40" style="border-radius:4px; margin-right:8px;">
+                            <div>
+                                {% if item.name %}
+                                    <strong>{{ item.name }}</strong>
+                                {% else %}
+                                    <span class="text-danger">❌ Mahsulot topilmadi</span>
+                                {% endif %}
+                                <p class="mb-0 small">Soni: {{ item.quantity }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </td>
+                    <td>{{ order.total_price }} $</td>
+                    <td>{{ order.get_status_display }}</td>
+                    <td>
+                        <form action="{% url 'admin_dashboard:update_order_status' order.id %}" method="post" class="d-flex gap-2">
+                            {% csrf_token %}
+                            <select name="status" class="form-select form-select-sm w-auto">
+                                {% for value, label in order.STATUS_CHOICES %}
+                                    <option value="{{ value }}" {% if value == order.status %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-sm btn-outline-success">💾</button>
+                        </form>
+                    </td>
+                    <td>{{ order.created_at|date:"d.m.Y, H:i" }}</td>
+                    <td>
+                        <a href="{% url 'admin_dashboard:order_detail' order.id %}" class="btn btn-sm btn-secondary">Ko‘rish</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="alert alert-secondary mt-4">Hech qanday buyurtma topilmadi.</div>
+    {% endif %}
+</div>
+{% endblock %}
