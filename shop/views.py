@@ -1,14 +1,15 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 
-from .forms import CheckoutAddressForm
-from .models import Product, Category, Order
+from .forms import CheckoutAddressForm, ProductForm
+from .models import Product, Category, Order, OrderItemSnapshot, ProductReview
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
+from django.contrib import messages
 
 
-# Create your views here.
+
 def home(request):
     query = request.GET.get('q', '')
     category_id = request.GET.get('category')
@@ -35,16 +36,110 @@ def home(request):
 
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
-    return render(request, 'shop/product_detail.html', {'product': product})
+    reviews = product.reviews.all().order_by('-created_at')
+
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            messages.error(request, "Review qoldirish uchun login qilishingiz kerak.")
+            return redirect('login')
+
+        comment = request.POST.get('comment')
+        stars = request.POST.get('stars')
+
+        if comment and stars:
+            stars = int(stars)
+            ProductReview.objects.create(
+                user=request.user,
+                product=product,
+                comment=comment,
+                stars_given=stars
+            )
+            messages.success(request, "Review muvaffaqiyatli qo‘shildi!")
+            return redirect('shop:product_detail', slug=product.slug)
+        else:
+            messages.error(request, "Iltimos, comment va ratingni to‘ldiring.")
+
+    context = {
+        'product': product,
+        'reviews': reviews
+    }
+    return render(request, 'shop/product_detail.html', context)
 
 
-# 🛒 CART
+@login_required
+def edit_review(request, review_id):
+    review = get_object_or_404(ProductReview, id=review_id, user=request.user)
+    product = review.product
+
+    if request.method == "POST":
+        comment = request.POST.get('comment')
+        stars = request.POST.get('stars')
+
+        if not comment or not stars:
+            messages.error(request, "Iltimos, comment va ratingni to‘ldiring.")
+        else:
+            review.comment = comment
+            review.stars_given = int(stars)
+            review.save()
+            messages.success(request, "Review muvaffaqiyatli yangilandi!")
+            return redirect('shop:product_detail', slug=product.slug)
+
+    context = {
+        'review': review,
+        'product': product
+    }
+    return render(request, 'shop/edit_review.html', context)
+
+
+
+# --------------------------
+# Review delete
+@login_required
+def delete_review(request, review_id):
+    review = get_object_or_404(ProductReview, id=review_id, user=request.user)
+    product_slug = review.product.slug
+    review.delete()
+    messages.success(request, "Review muvaffaqiyatli o‘chirildi!")
+    return redirect('shop:product_detail', slug=product_slug)
+
+
+@staff_member_required
+def product_edit(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == "POST":
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            return redirect('shop:product_detail', slug=product.slug)
+    else:
+        form = ProductForm(instance=product)
+
+    return render(request, 'shop/product_edit.html', {'form': form, 'product': product})
+
+
+@staff_member_required
+def product_delete(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == "POST":
+        product.delete()
+        return redirect('home')
+
+    return render(request, 'shop/product_delete.html', {'product': product})
+
+
+
+#############  CART #############
+
 def cart_view(request):
     cart = request.session.get('cart', {})
-    product_ids = cart.keys()
-    products = Product.objects.filter(id__in=product_ids)
+    products = Product.objects.filter(id__in=cart.keys())
 
-    total = sum(float(p.get_discounted_price()) * cart[str(p.id)] for p in products)
+    total = sum(
+        float(p.get_discounted_price()) * cart[str(p.id)]
+        for p in products
+    )
 
     return render(request, 'shop/cart.html', {
         'products': products,
@@ -52,11 +147,13 @@ def cart_view(request):
         'total': total
     })
 
+
 def add_to_cart(request, product_id):
     cart = request.session.get('cart', {})
     cart[str(product_id)] = cart.get(str(product_id), 0) + 1
     request.session['cart'] = cart
     return redirect('shop:cart_view')
+
 
 def remove_from_cart(request, product_id):
     cart = request.session.get('cart', {})
@@ -67,61 +164,7 @@ def remove_from_cart(request, product_id):
 
 
 
-
-# @login_required
-# def checkout(request):
-#     cart = request.session.get('cart', {})
-#     if not cart:
-#         return render(request, 'shop/checkout.html', {'error': 'Savat bo‘sh!'})
-#
-#     products = Product.objects.filter(id__in=cart.keys())
-#
-#     total = 0
-#     for product in products:
-#         quantity = cart.get(str(product.id), 0)
-#         total += product.get_discounted_price() * quantity
-#
-#     # Buyurtma yaratamiz
-#     order = Order.objects.create(
-#         user=request.user,
-#         items=cart,
-#         total_price=total
-#     )
-#
-#     # Savatni tozalaymiz
-#     request.session['cart'] = {}
-#
-#     return render(request, 'shop/checkout_success.html', {'order': order})
-
-@login_required
-def checkout(request):
-    cart = request.session.get('cart', {})
-
-    # ❗ Agar foydalanuvchi qayta kirsa (savat bo‘sh bo‘lsa)
-    if not cart:
-        return render(request, 'shop/checkout_blocked.html', {
-            'message': "Savat bo‘sh yoki siz allaqachon buyurtma bergansiz.",
-        })
-
-    products = Product.objects.filter(id__in=cart.keys())
-
-    total = 0
-    for product in products:
-        quantity = cart.get(str(product.id), 0)
-        total += product.get_discounted_price() * quantity
-
-    # Buyurtma yaratamiz
-    order = Order.objects.create(
-        user=request.user,
-        items=cart,
-        total_price=total
-    )
-
-    # Savatni tozalaymiz
-    request.session['cart'] = {}
-
-    return redirect('shop:checkout_success', order_id=order.id)
-
+#############  CHECKOUT (2-step) #############
 
 @login_required
 def checkout_address(request):
@@ -150,12 +193,12 @@ def checkout_confirm(request):
 
     products = Product.objects.filter(id__in=cart.keys())
 
-    total = 0
-    for p in products:
-        total += p.get_discounted_price() * cart[str(p.id)]
+    total = sum(
+        p.get_discounted_price() * cart[str(p.id)]
+        for p in products
+    )
 
     if request.method == "POST":
-        # ORDER yaratamiz
         order = Order.objects.create(
             user=request.user,
             items=cart,
@@ -166,7 +209,18 @@ def checkout_confirm(request):
             note=address.get('note', '')
         )
 
-        # Cartni tozalaymiz
+        # 📌 SNAPSHOT YARATAMIZ
+        for p in products:
+            snap = OrderItemSnapshot.objects.create(
+                product_id=p.id,
+                name=p.name,
+                image=p.image.url if p.image else "no_image.jpg",
+                price=p.get_discounted_price(),
+                quantity=cart[str(p.id)]
+            )
+            order.snapshots.add(snap)
+
+        # savatni tozalaymiz
         request.session['cart'] = {}
         request.session['checkout_address'] = {}
 
@@ -181,9 +235,8 @@ def checkout_confirm(request):
 
 
 
+#############  ADMIN #############
 
-
-#############  Admin Dashboard  #############
 @staff_member_required
 def admin_dashboard(request):
     query = request.GET.get('q', '')
@@ -191,7 +244,6 @@ def admin_dashboard(request):
 
     orders = Order.objects.all().order_by('-created_at')
 
-    # Filtrlash
     if query:
         orders = orders.filter(
             Q(user__username__icontains=query) |
@@ -200,12 +252,12 @@ def admin_dashboard(request):
     if status_filter:
         orders = orders.filter(status=status_filter)
 
-    context = {
+    return render(request, 'shop/admin_dashboard.html', {
         'orders': orders,
         'query': query,
         'status_filter': status_filter,
-    }
-    return render(request, 'shop/admin_dashboard.html', context)
+    })
+
 
 @staff_member_required
 @require_POST
@@ -219,18 +271,22 @@ def update_order_status(request, order_id):
 
 
 
+#############  MY ORDERS #############
 
-#############  My Orders  #############
 @login_required
 def my_orders(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'shop/my_orders.html', {'orders': orders})
+    return render(request, 'shop/my_orders.html', {"orders": orders})
+
 
 @login_required
 def checkout_success(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
-    return render(request, 'shop/checkout_success.html', {'order': order})
+    snapshots = order.snapshots.all()
 
-
+    return render(request, 'shop/checkout_success.html', {
+        "order": order,
+        "snapshots": snapshots
+    })
 
 

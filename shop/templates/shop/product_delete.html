@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ product.name }} mahsulotini o‘chirmoqchimisiz?</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Ha, o‘chir</button>
+    <a href="{% url 'shop:product_detail' product.slug %}" class="btn btn-secondary">Yo‘q, qaytaman</a>
+</form>
+
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %} Edit Review {% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+      <h2>Edit Review for {{ product.name }}</h2>
+
+      <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+              <label class="form-label">Stars</label>
+              <div id="starRating" class="star-rating">
+                  {% for i in "12345" %}
+                      <span class="star" data-value="{{ i }}">&#9733;</span>
+                  {% endfor %}
+              </div>
+              <input type="hidden" name="stars" id="starsInput" value="{{ review.stars_given }}">
+          </div>
+
+          <div class="mb-3">
+              <label for="comment" class="form-label">Comment</label>
+              <textarea class="form-control" name="comment" id="comment" rows="3">{{ review.comment }}</textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Update Review</button>
+          <a href="{% url 'shop:product_detail' product.slug %}" class="btn btn-secondary">Cancel</a>
+      </form>
+  </div>
+
+  <style>
+  .star {
+      font-size: 2rem;
+      color: gray;
+      cursor: pointer;
+  }
+  .star.selected, .star.hovered {
+      color: gold;
+  }
+  </style>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+      const stars = document.querySelectorAll('#starRating .star');
+      const starsInput = document.getElementById('starsInput');
+
+      function setStars(value) {
+          stars.forEach(star => {
+              star.classList.toggle('selected', star.dataset.value <= value);
+          });
+          starsInput.value = value;
+      }
+
+      // Initial selection
+      setStars(starsInput.value);
+
+      stars.forEach(star => {
+          star.addEventListener('mouseover', () => {
+              stars.forEach(s => s.classList.toggle('hovered', s.dataset.value <= star.dataset.value));
+          });
+          star.addEventListener('mouseout', () => {
+              stars.forEach(s => s.classList.remove('hovered'));
+          });
+          star.addEventListener('click', () => {
+              setStars(star.dataset.value);
+          });
+      });
+  });
+  </script>
+{% endblock %}

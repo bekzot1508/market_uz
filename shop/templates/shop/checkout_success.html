@@ -4,49 +4,32 @@
 {% block title %} Order Successful {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-  <div class="card shadow p-4">
-    <h2 class="mb-3 text-success">✅ Order Successful!</h2>
-    <p class="lead">Your order <strong>#{{ order.id }}</strong> has been placed successfully.</p>
+  <h2>Buyurtma muvaffaqiyatli yakunlandi!</h2>
 
-    <h4 class="mt-4">🛍️ Ordered Products</h4>
-    <hr>
+  <h3>Buyurtma raqami: #{{ order.id }}</h3>
+  <p>Sana: {{ order.created_at }}</p>
 
-    {% for product_id, quantity in order.items.items %}
-      {% with product=product_id|get_product %}
-        {% if product %}
-          <div class="d-flex align-items-center mb-3">
-            <a href="{% url 'shop:product_detail' product.slug %}" class="d-flex align-items-center text-decoration-none text-dark">
-              <img src="{{ product.image.url }}" alt="{{ product.name }}" width="70" height="70" class="rounded me-3 border">
-              <div>
-                <h5 class="mb-1">{{ product.name }}</h5>
-                <p class="mb-0 small text-muted">Quantity: {{ quantity }}</p>
-                <p class="mb-0 small text-muted">Price: {{ product.get_discounted_price }} $</p>
-              </div>
-            </a>
-          </div>
-          <hr>
-        {% endif %}
-      {% endwith %}
-    {% endfor %}
+  <hr>
 
-    <div class="mt-4">
-      <h5>Total Price: <strong>{{ order.total_price }} $</strong></h5>
-    </div>
+  <h3>Mahsulotlar:</h3>
 
-    <div class="mt-5 text-center">
-      <a href="{% url 'shop:cart_view' %}" class="btn btn-outline-primary">
-        🔙 Back to Cart
-      </a>
-      <a href="{% url 'shop:my_orders' %}" class="btn btn-outline-secondary">
-        🔙 Back to My Orders
-      </a>
-    </div>
-
-    <div class="mt-4">
-
+  {% for item in snapshots %}
+  <div style="display:flex; align-items:center; margin-bottom:10px; opacity:0.6;">
+      <img src="{{ item.image }}" width="70" style="border-radius:5px; margin-right:10px;">
+      <div>
+          <p style="margin:0;">
+              {{ item.name }}
+              <span style="color:gray;">(o‘chirilgan mahsulot)</span>
+          </p>
+          <small>{{ item.quantity }} x {{ item.price }} so‘m</small>
+      </div>
   </div>
+  {% endfor %}
 
-  </div>
-</div>
+  <hr>
+
+  <h3>Umumiy summa: {{ order.total_price }} so‘m</h3>
+
+  <a href="{% url 'shop:my_orders' %}" class="btn btn-primary">Mening buyurtmalarim</a>
+
 {% endblock %}

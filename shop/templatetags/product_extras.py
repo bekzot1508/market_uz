@@ -30,3 +30,11 @@ def product_detail_url(product_id):
         return '#'
 
 
+
+@register.filter
+def get_deleted_product_name(product_id):
+    # Oxirgi ma’lumotni qaytarish yoki IDni chiqarish
+    return f"Product #{product_id}"
+
+
+
