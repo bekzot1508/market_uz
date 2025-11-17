@@ -8,10 +8,10 @@ class CheckoutAddressForm(forms.Form):
     note = forms.CharField(label="Izoh (ixtiyoriy)", widget=forms.Textarea, required=False)
 
 
-class ProductForm(forms.ModelForm):
-    class Meta:
-        model = Product
-        fields = ['name', 'image', 'category', 'description', 'price', 'discount_price', 'stock', 'is_active']
+# class ProductForm(forms.ModelForm):
+#     class Meta:
+#         model = Product
+#         fields = ['name', 'image', 'category', 'description', 'price', 'discount_price', 'stock', 'is_active']
 
 
 class ProductForm(forms.ModelForm):

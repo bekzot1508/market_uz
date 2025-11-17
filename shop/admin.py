@@ -1,29 +1,26 @@
 from django.contrib import admin
 from django import forms
-from .models import Product, Category, Order
-import json
+from .models import Product, Category, Order, ProductImage
+
+# Inline for product images
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    fields = ("image", )
 
 
-# Custom JSON widget
+# Custom JSON widget for extra_data
 class JSONTextArea(forms.Textarea):
     class Media:
         js = (
             'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js',
             'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js',
         )
-        css = {
-            'all': (
-                'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css',
-            )
-        }
+        css = {'all': ('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css',)}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.attrs.update({
-            'rows': 15,
-            'cols': 80,
-            'style': 'font-family: monospace; background: #f9f9f9;'
-        })
+        self.attrs.update({'rows': 15, 'cols': 80, 'style': 'font-family: monospace; background: #f9f9f9;'})
 
 
 class ProductAdminForm(forms.ModelForm):
@@ -41,9 +38,10 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'category', 'price', 'stock', 'is_active')
     list_filter = ('category', 'is_active')
     search_fields = ('name', 'description')
+    inlines = [ProductImageInline]
 
     class Media:
-        js = ('shop/admin/js/json_editor.js',)  # static fayl yo‘li
+        js = ('shop/admin/js/json_editor.js',)
 
 
 @admin.register(Category)
@@ -59,7 +57,6 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ('id', 'user__username', 'full_name', 'phone', 'address')
 
     def order_title(self, obj):
-        # Buyurtmadagi mahsulotlar nomini olish
         items = []
         for product_id, qty in obj.items.items():
             try:
@@ -67,9 +64,6 @@ class OrderAdmin(admin.ModelAdmin):
                 items.append(f"{product.name} (x{qty})")
             except Product.DoesNotExist:
                 items.append(f"Unknown product (ID: {product_id})")
-
-        items_str = ", ".join(items)
-
-        return f"Order #{obj.id} — {obj.user.username} — {items_str}"
+        return f"Order #{obj.id} — {obj.user.username} — {', '.join(items)}"
 
     order_title.short_description = "Order"

@@ -1,15 +1,170 @@
 {% extends 'base.html' %}
-
-{% block title %}{% if product %}Edit Product{% else %}Add Product{% endif %}{% endblock %}
+{% load crispy_forms_tags %}
+{% load static %}
 
 {% block content %}
 <div class="container mt-4">
     <h2>{% if product %}Edit Product{% else %}Add Product{% endif %}</h2>
-    <form method="post" enctype="multipart/form-data">
+
+    <form method="POST" enctype="multipart/form-data" id="product-form">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">{% if product %}Update{% else %}Create{% endif %}</button>
-        <a href="{% url 'admin_dashboard:products_list' %}" class="btn btn-secondary">Cancel</a>
+        {{ form|crispy }}
+
+        <!-- =============== EXTRA DATA =============== -->
+        <div class="mb-4">
+            <label class="fw-bold">Extra Data (Key - Value)</label>
+
+            <div id="extra-data-container">
+                {% if product and product.extra_data %}
+                    {% for key, value in product.extra_data.items %}
+                    <div class="row mb-2 extra-row">
+                        <div class="col">
+                            <input type="text" class="form-control key-input" placeholder="Key" value="{{ key }}">
+                        </div>
+                        <div class="col">
+                            <input type="text" class="form-control value-input" placeholder="Value" value="{{ value }}">
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-danger remove-row">×</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <button type="button" id="add-extra-btn" class="btn btn-sm btn-primary mt-2">Add Field</button>
+
+            <!-- hidden JSON -->
+            <input type="hidden" name="extra_data" id="extra-data-input">
+        </div>
+        <!-- =============== / EXTRA DATA =============== -->
+
+
+
+        <!-- =============== IMAGE UPLOAD =============== -->
+        <div class="mb-4">
+            <label class="fw-bold">Gallery Images</label>
+            <input type="file" name="images" id="gallery-input" multiple class="form-control">
+        </div>
+
+        <div class="row" id="gallery-preview">
+            {% if product %}
+                {% for img in product.images.all %}
+                <div class="col-3 mb-2 position-relative gallery-item" data-id="{{ img.id }}">
+                    <img src="{{ img.image.url }}" class="img-fluid rounded" style="height:120px; object-fit:cover;">
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 delete-btn">×</button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <!-- =============== / IMAGE UPLOAD =============== -->
+
+        <button type="submit" class="btn btn-primary mt-3">Save</button>
+        <a href="{% url 'admin_dashboard:products_list' %}" class="btn btn-secondary mt-3">Cancel</a>
     </form>
 </div>
+
+
+<!-- =============== JS =============== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    /* ================= EXTRA DATA ================= */
+
+    const form = document.getElementById("product-form");
+    const extraContainer = document.getElementById("extra-data-container");
+    const extraInput = document.getElementById("extra-data-input");
+    const addExtraBtn = document.getElementById("add-extra-btn");
+
+    function updateExtraInput() {
+        const data = {};
+        extraContainer.querySelectorAll(".extra-row").forEach(row => {
+            const key = row.querySelector(".key-input").value.trim();
+            const val = row.querySelector(".value-input").value.trim();
+            if (key.length > 0) {
+                data[key] = val;
+            }
+        });
+        extraInput.value = JSON.stringify(data);
+    }
+
+    addExtraBtn.addEventListener("click", () => {
+        const div = document.createElement("div");
+        div.classList.add("row", "mb-2", "extra-row");
+
+        div.innerHTML = `
+            <div class="col">
+                <input type="text" class="form-control key-input" placeholder="Key">
+            </div>
+            <div class="col">
+                <input type="text" class="form-control value-input" placeholder="Value">
+            </div>
+            <div class="col-auto">
+                <button type="button" class="btn btn-danger remove-row">×</button>
+            </div>
+        `;
+
+        extraContainer.appendChild(div);
+
+        div.querySelector(".remove-row").addEventListener("click", () => div.remove());
+    });
+
+    form.addEventListener("submit", updateExtraInput);
+
+
+
+    /* ================= IMAGES ================= */
+
+    const input = document.getElementById("gallery-input");
+    const preview = document.getElementById("gallery-preview");
+
+    // New image preview
+    input.addEventListener("change", () => {
+        for (const file of input.files) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const div = document.createElement("div");
+                div.classList.add("col-3", "mb-2", "position-relative", "gallery-item");
+                div.innerHTML = `
+                    <img src="${e.target.result}" class="img-fluid rounded" style="height:120px;object-fit:cover;">
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-btn">×</button>
+                `;
+                preview.appendChild(div);
+
+                div.querySelector(".remove-btn").addEventListener("click", () => div.remove());
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Delete existing images
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const parent = this.closest(".gallery-item");
+            parent.remove();
+
+            const hidden = document.createElement("input");
+            hidden.type = "hidden";
+            hidden.name = "delete_images";
+            hidden.value = parent.getAttribute("data-id");
+
+            form.appendChild(hidden);
+        });
+    });
+
+    // Sortable
+    new Sortable(preview, { animation: 150, ghostClass: 'sortable-ghost' });
+
+});
+</script>
+
+<style>
+.sortable-ghost {
+    opacity: 0.4;
+    border: 2px dashed #007bff;
+}
+</style>
+
 {% endblock %}

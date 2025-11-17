@@ -1,13 +1,16 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from shop.models import Product, Category, Order, OrderItemSnapshot
-from shop.forms import ProductForm
+from shop.models import Product, Category, Order, OrderItemSnapshot, ProductImage
 from user.models import CustomUser
+from .forms import ProductForm, ProductImageForm
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
 from django.views.decorators.http import require_POST
+from django.utils.text import slugify
+import json
+
 
 
 
@@ -35,46 +38,97 @@ def dashboard_home(request):
 # ================= Products CRUD =================
 @login_required
 @user_passes_test(staff_required)
-def products_list(request):
+def admin_products_list(request):
     products = Product.objects.all().order_by('-created_at')
     return render(request, 'admin_dashboard/products_list.html', {'products': products})
 
 
-# ================= Product Create =================
-@login_required
-@user_passes_test(staff_required)
-def product_create(request):
+
+
+
+@staff_member_required
+def admin_product_create(request):
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Product created!")
-            return redirect('admin_dashboard:products_list')
+            product = form.save(commit=False)
+            if not product.slug:
+                product.slug = slugify(product.name)
+
+            # ✅ Extra Data JSON parse
+            extra_raw = request.POST.get("extra_data") or "{}"
+            try:
+                extra_parsed = json.loads(extra_raw)
+            except json.JSONDecodeError:
+                messages.error(request, "Extra Data must be valid JSON!")
+                return redirect("admin_dashboard:product_create")
+            product.extra_data = extra_parsed
+            product.save()
+
+            # ✅ Save multiple images
+            images = request.FILES.getlist("images")
+            for img in images:
+                ProductImage.objects.create(product=product, image=img)
+
+            messages.success(request, "Product created successfully!")
+            return redirect("admin_dashboard:products_list")
     else:
         form = ProductForm()
-    return render(request, 'admin_dashboard/product_form.html', {'form': form})
+
+    return render(request, "admin_dashboard/product_form.html", {"form": form, "product": None})
 
 
-# ================= Product Edit =================
-@login_required
-@user_passes_test(staff_required)
-def product_edit(request, product_id):
+@staff_member_required
+def admin_product_edit(request, product_id):
     product = get_object_or_404(Product, id=product_id)
+
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Product updated!")
-            return redirect('admin_dashboard:products_list')
+            product = form.save(commit=False)
+            if not product.slug:
+                product.slug = slugify(product.name)
+
+            # ✅ Extra Data JSON parse
+            extra_raw = request.POST.get("extra_data") or "{}"
+            try:
+                extra_parsed = json.loads(extra_raw)
+            except json.JSONDecodeError:
+                messages.error(request, "Extra Data must be valid JSON!")
+                return redirect("admin_dashboard:product_edit", product_id=product.id)
+            product.extra_data = extra_parsed
+            product.save()
+
+            # ✅ Delete selected images
+            delete_ids = request.POST.getlist("delete_images")
+            if delete_ids:
+                ProductImage.objects.filter(id__in=delete_ids, product=product).delete()
+
+            # ✅ Save new images
+            images = request.FILES.getlist("images")
+            for img in images:
+                ProductImage.objects.create(product=product, image=img)
+
+            messages.success(request, "Product updated successfully!")
+            return redirect("admin_dashboard:products_list")
     else:
         form = ProductForm(instance=product)
-    return render(request, 'admin_dashboard/product_form.html', {'form': form, 'product': product})
+
+    return render(request, "admin_dashboard/product_form.html", {"form": form, "product": product})
+
+
+
+
+
+
+
+
 
 
 # ================= Product delete =================
 @login_required
 @user_passes_test(staff_required)
-def product_delete(request, product_id):
+def admin_product_delete(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     if request.method == "POST":
         product.delete()
@@ -101,6 +155,7 @@ def product_delete(request, product_id):
 
 
 
+# ================= admin_orders_list =================
 @staff_member_required
 def admin_orders_list(request):
     """Admin dashboard: orders list with search & status filter"""

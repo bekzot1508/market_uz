@@ -34,36 +34,56 @@ def home(request):
     })
 
 
+
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
     reviews = product.reviews.all().order_by('-created_at')
 
+    # POST review
     if request.method == 'POST':
         if not request.user.is_authenticated:
             messages.error(request, "Review qoldirish uchun login qilishingiz kerak.")
-            return redirect('login')
+            return redirect('user:login')
 
         comment = request.POST.get('comment')
         stars = request.POST.get('stars')
 
         if comment and stars:
-            stars = int(stars)
-            ProductReview.objects.create(
-                user=request.user,
-                product=product,
-                comment=comment,
-                stars_given=stars
-            )
-            messages.success(request, "Review muvaffaqiyatli qo‘shildi!")
+            try:
+                stars = int(stars)
+            except ValueError:
+                stars = 0
+            if 1 <= stars <= 5:
+                ProductReview.objects.create(
+                    user=request.user,
+                    product=product,
+                    comment=comment,
+                    stars_given=stars
+                )
+                messages.success(request, "Review muvaffaqiyatli qo‘shildi!")
+            else:
+                messages.error(request, "Iltimos, 1 dan 5 gacha rating kiriting!")
             return redirect('shop:product_detail', slug=product.slug)
         else:
             messages.error(request, "Iltimos, comment va ratingni to‘ldiring.")
 
+    # extra_datani parse qilamiz (string bo‘lsa)
+    if isinstance(product.extra_data, dict):
+        extra_data = product.extra_data
+    else:
+        import json
+        try:
+            extra_data = json.loads(product.extra_data)
+        except Exception:
+            extra_data = {}
+
     context = {
         'product': product,
-        'reviews': reviews
+        'reviews': reviews,
+        'extra_data': extra_data
     }
     return render(request, 'shop/product_detail.html', context)
+
 
 
 @login_required
@@ -101,6 +121,7 @@ def delete_review(request, review_id):
     review.delete()
     messages.success(request, "Review muvaffaqiyatli o‘chirildi!")
     return redirect('shop:product_detail', slug=product_slug)
+
 
 
 @staff_member_required
