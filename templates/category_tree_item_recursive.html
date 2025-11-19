@@ -1,0 +1,16 @@
+<li class="dropdown-submenu">
+  <!-- Level 1: katta folder, keyingi darajalar: kichik folder -->
+  {% if category.parent %}
+    <a class="dropdown-item dropdown-toggle" href="{% url 'home' %}?category={{ category.id }}">📁 {{ category.name }}</a>
+  {% else %}
+    <a class="dropdown-item dropdown-toggle" href="{% url 'home' %}?category={{ category.id }}">📂 {{ category.name }}</a>
+  {% endif %}
+
+  {% if category.subcategories.all %}
+    <ul class="dropdown-menu">
+      {% for child in category.subcategories.all %}
+        {% include 'category_tree_item_recursive.html' with category=child %}
+      {% endfor %}
+    </ul>
+  {% endif %}
+</li>

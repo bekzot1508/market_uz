@@ -1,0 +1,11 @@
+<!--{# shop/templates/partials/subcategory_tree.html #}-->
+<!--<ul class="list-group mt-2 subcategory-list">-->
+<!--  {% for subcat in subcategories %}-->
+<!--    <li class="list-group-item">-->
+<!--      <a href="{% url 'home' %}?category={{ subcat.id }}" class="text-decoration-none">{{ subcat.name }}</a>-->
+<!--      {% if subcat.subcategories.all %}-->
+<!--        {% include "subcategory_tree.html" with subcategories=subcat.subcategories.all %}-->
+<!--      {% endif %}-->
+<!--    </li>-->
+<!--  {% endfor %}-->
+<!--</ul>-->

@@ -38,3 +38,17 @@ def get_deleted_product_name(product_id):
 
 
 
+
+from django import template
+register = template.Library()
+
+@register.filter
+def times(number):
+    """
+    Template ichida range() o‘rniga ishlatamiz.
+    {% for i in 5|times %}
+    """
+    return range(int(number))
+
+
+

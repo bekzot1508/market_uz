@@ -1,38 +1,161 @@
 {% extends 'base.html' %}
 {% load cart_extras %}
 
-{% block title %} Home {% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-  <h1>Mahsulotlar</h1>
+<div class="row">
+  <!-- Sidebar toggle for small screens -->
+  <div class="d-lg-none mb-3">
+    <button class="btn btn-dark w-100" type="button" data-bs-toggle="collapse" data-bs-target="#categorySidebar" aria-expanded="false" aria-controls="categorySidebar">
+      <i class="fa fa-bars me-1"></i> Kategoriyalar
+    </button>
+  </div>
 
-  <div class="row">
-    <div class="col-md-3">
-      <!-- side categories panel -->
-    </div>
-    <div class="col-md-9">
-      <div class="row">
-        {% for product in products %}
-          <div class="col-md-4 mb-3">
-            <div class="card">
-              <div class="card-body">
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:150px; height:150px; object-fit:cover;">
-                <h5 class="card-title"><a href="{% url 'shop:product_detail' product.slug %}">{{ product.name | truncatewords:10 }}</a></h5>
-                <p class="card-text">{{ product.get_discounted_price }} $</p>
-
-                <!-- product id bo'yicha savatdagi miqdor -->
-                {% with qty=request.session.cart|get_item:product.id %}
-                  {% if qty and qty > 0 %}
-                    <p class="text-success">Savatda: {{ qty }}</p>
-                  {% endif %}
-                {% endwith %}
-
-                <a href="{% url 'shop:add_to_cart' product.id %}" class="btn btn-primary">Savatga qo‘shish</a>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
+  <!-- Sidebar -->
+  <div class="col-lg-3 mb-4">
+    <div class="collapse d-lg-block" id="categorySidebar">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white fw-bold">
+          Kategoriyalar
+        </div>
+        <ul class="list-group list-group-flush category-tree">
+          <li class="list-group-item category-item bg-light">
+            <a href="{% url 'home' %}" class="text-decoration-none fw-bold text-dark">🏠 Home</a>
+          </li>
+          {% for cat in categories %}
+            <li class="list-group-item category-item">
+              <a href="{% url 'home' %}?category={{ cat.id }}" class="text-decoration-none">{{ cat.name }}</a>
+              {% if cat.subcategories.all %}
+                <ul class="list-group mt-2 subcategory-list">
+                  {% for subcat in cat.subcategories.all %}
+                    <li class="list-group-item">
+                      <a href="{% url 'home' %}?category={{ subcat.id }}" class="text-decoration-none">{{ subcat.name }}</a>
+                      {% if subcat.subcategories.all %}
+                        <ul class="list-group mt-1">
+                          {% for subsub in subcat.subcategories.all %}
+                            <li class="list-group-item">
+                              <a href="{% url 'home' %}?category={{ subsub.id }}" class="text-decoration-none">{{ subsub.name }}</a>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
       </div>
     </div>
   </div>
+
+  <!-- Product Grid -->
+  <div class="col-lg-9">
+    <div class="row g-3">
+      {% for product in products %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex">
+          <div class="card h-100 border-0 shadow-sm product-card w-100 d-flex flex-column">
+            <a href="{% url 'shop:product_detail' product.slug %}" class="d-block">
+              <img src="{{ product.image.url }}" class="img-fluid product-img" alt="{{ product.name }}">
+            </a>
+            <div class="card-body d-flex flex-column flex-grow-1">
+              <h5 class="card-title mb-2">
+                <a href="{% url 'shop:product_detail' product.slug %}" class="text-dark text-decoration-none">{{ product.name|truncatewords:10 }}</a>
+              </h5>
+
+              {% if product.stock > 0 %}
+                <p class="card-text fw-bold mb-2">{{ product.get_discounted_price }} $</p>
+              {% else %}
+                <p class="text-danger fw-bold mb-2">Stockda yo‘q</p>
+              {% endif %}
+
+              <div class="mb-2 rating" data-rating="{{ product.average_rating }}">
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <small class="text-muted ms-1">({{ product.review_count }})</small>
+              </div>
+
+              {% with qty=request.session.cart|get_item:product.id %}
+                {% if qty and qty > 0 %}
+                  <p class="text-success mb-2">Savatda: {{ qty }}</p>
+                {% endif %}
+              {% endwith %}
+
+              <a href="{% url 'shop:add_to_cart' product.id %}" class="btn btn-warning mt-auto">
+                <i class="fa fa-cart-plus me-1"></i> Savatga qo‘shish
+              </a>
+              <p class="text-muted mt-1">Stock: {{ product.stock }}</p>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <p class="text-center text-muted">Hech qanday mahsulot topilmadi.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>
+/* Sidebar */
+.category-tree .category-item { position: relative; }
+.category-tree .subcategory-list { display: none; padding-left: 15px; }
+@media(min-width:992px) {
+  .category-tree .category-item:hover > .subcategory-list {
+    display: block;
+    background: linear-gradient(90deg, #fff3e0, #ffe0b2);
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+}
+@media(max-width:991.98px) {
+  .category-tree .subcategory-list { display: block; }
+}
+.category-tree a { color: #333; font-weight: 500; }
+.category-tree a:hover { color: #e67e22; text-decoration: none; }
+
+/* Product Card */
+.product-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  border-radius: 8px;
+}
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+}
+
+/* Product Image */
+.product-img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  border-radius: 8px 8px 0 0;
+  transition: transform 0.3s ease;
+}
+.product-img:hover { transform: scale(1.05); }
+
+/* Rating stars */
+.rating i.fa-star { color: #ddd; }
+.rating i.fa-star.text-warning { color: #ffc107; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.rating').forEach(starDiv => {
+        const rating = parseFloat(starDiv.getAttribute('data-rating')) || 0;
+        const stars = starDiv.querySelectorAll('i.fa-star');
+        stars.forEach((star, index) => {
+            if(index < Math.round(rating)) star.classList.add('text-warning');
+            else star.classList.add('text-secondary');
+        });
+    });
+});
+</script>
 {% endblock %}
