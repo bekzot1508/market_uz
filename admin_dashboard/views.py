@@ -3,18 +3,12 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from shop.models import Product, Category, Order, OrderItemSnapshot, ProductImage
 from user.models import CustomUser
-from .forms import ProductForm, ProductImageForm
-
+from .forms import ProductForm, ProductImageForm, CategoryForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
 from django.views.decorators.http import require_POST
 from django.utils.text import slugify
 import json
-
-
-
-
-
 
 
 # Create your views here.
@@ -35,14 +29,15 @@ def dashboard_home(request):
     return render(request, 'admin_dashboard/dashboard_home.html', context)
 
 
-# ================= Products CRUD =================
+#===============================
+#   ADMIN PRODUCT MANAGE
+#===============================
+# ================= Products LIST =================
 @login_required
 @user_passes_test(staff_required)
 def admin_products_list(request):
     products = Product.objects.all().order_by('-created_at')
     return render(request, 'admin_dashboard/products_list.html', {'products': products})
-
-
 
 
 
@@ -117,14 +112,6 @@ def admin_product_edit(request, product_id):
     return render(request, "admin_dashboard/product_form.html", {"form": form, "product": product})
 
 
-
-
-
-
-
-
-
-
 # ================= Product delete =================
 @login_required
 @user_passes_test(staff_required)
@@ -154,7 +141,9 @@ def admin_product_delete(request, product_id):
 #     return render(request, 'admin_dashboard/products.html', {'products': products})
 
 
-
+#===============================
+#   ADMIN OREDERS MANAGE
+#===============================
 # ================= admin_orders_list =================
 @staff_member_required
 def admin_orders_list(request):
@@ -204,4 +193,73 @@ def admin_order_detail(request, order_id):
         "order": order,
         "snapshots": snapshots
     })
+
+
+
+#===============================
+#   ADMIN CATEGORIES MANAGE
+#===============================
+@staff_member_required
+def categories_list(request):
+    categories = Category.objects.filter(parent__isnull=True)
+    return render(request, "admin_dashboard/category_list.html", {"categories": categories})
+
+
+@staff_member_required
+@staff_member_required
+def category_create(request):
+    parent_id = request.GET.get("parent")
+    initial = {}
+    if parent_id:
+        try:
+            initial["parent"] = Category.objects.get(id=int(parent_id))
+        except (Category.DoesNotExist, ValueError):
+            pass
+
+    if request.method == "POST":
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Kategoriya yaratildi.")
+            return redirect("admin_dashboard:categories_list")
+    else:
+        form = CategoryForm(initial=initial)
+
+    return render(request, "admin_dashboard/category_form.html", {
+        "title": "Create Category",
+        "form": form
+    })
+
+
+
+@staff_member_required
+@staff_member_required
+def category_edit(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == "POST":
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Kategoriya yangilandi.")
+            return redirect("admin_dashboard:categories_list")
+    else:
+        form = CategoryForm(instance=category)
+
+    return render(request, "admin_dashboard/category_form.html", {
+        "title": "Edit Category",
+        "form": form
+    })
+
+
+
+
+@staff_member_required
+def category_delete(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+
+    if request.method == "POST":
+        category.delete()
+        return redirect("admin_dashboard:categories_list")
+
+    return render(request, "admin_dashboard/category_delete_confirm.html", {"category": category})
 

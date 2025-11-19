@@ -1,0 +1,40 @@
+<li>
+    <div class="category-row">
+
+        <div class="d-flex align-items-center category-name">
+
+            {% if category.subcategories.all %}
+                <span class="toggle-icon" data-target="subcats-{{ category.id }}">
+                    <i class="fas fa-caret-down"></i>
+                </span>
+            {% else %}
+                <span style="width:16px; display:inline-block;"></span>
+            {% endif %}
+
+            <i class="fas fa-folder folder"></i>
+            <strong>{{ category.name }}</strong>
+        </div>
+
+        <div class="category-actions">
+            <a href="{% url 'admin_dashboard:category_create' %}?parent={{ category.id }}" class="btn btn-sm btn-success">
+                <i class="fas fa-plus"></i> Sub
+            </a>
+            <a href="{% url 'admin_dashboard:category_edit' category.id %}" class="btn btn-sm btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'admin_dashboard:category_delete' category.id %}" class="btn btn-sm btn-danger"
+               onclick="return confirm('Delete this category?')">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+        </div>
+
+    </div>
+
+    {% if category.subcategories.all %}
+        <ul class="list-unstyled ms-4" id="subcats-{{ category.id }}">
+            {% for sub in category.subcategories.all %}
+                {% include "admin_dashboard/category_item.html" with category=sub %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+</li>

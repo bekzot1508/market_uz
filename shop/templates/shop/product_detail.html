@@ -40,6 +40,7 @@
             {% if user.is_staff %}
                 <a href="{% url 'shop:product_edit' product.id %}" class="btn btn-warning mb-2">Edit</a>
                 <a href="{% url 'shop:product_delete' product.id %}" class="btn btn-danger mb-2">Delete</a>
+                <a href="{% url 'admin_dashboard:products_list' %}" class="btn btn-primary mb-2">Manage Products</a>
             {% endif %}
         </div>
     </div>

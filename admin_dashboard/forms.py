@@ -1,5 +1,5 @@
 from django import forms
-from shop.models import Product, ProductImage
+from shop.models import Product, ProductImage, Category
 import json
 
 
@@ -31,3 +31,31 @@ class ProductImageForm(forms.ModelForm):
     class Meta:
         model = ProductImage
         fields = ["image"]
+
+
+# ================= CategoryForm =================
+class CategoryForm(forms.ModelForm):
+    parent = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        empty_label="--- None ---"
+    )
+
+    class Meta:
+        model = Category
+        fields = ["name", "parent"]
+
+    def clean_name(self):
+        name = self.cleaned_data.get("name").strip()
+        qs = Category.objects.filter(name__iexact=name)  # case-insensitive filter
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)  # editda o'zini chiqarib tashlash
+        if qs.exists():
+            raise forms.ValidationError("Bu nomdagi kategoriya allaqachon mavjud.")
+        return name
+
+    def clean_parent(self):
+        parent = self.cleaned_data.get("parent")
+        if parent and self.instance and parent.id == self.instance.id:
+            raise forms.ValidationError("O'zingizni parent qilolmaysiz.")
+        return parent

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h3>Delete Category</h3>
+    <p>Are you sure you want to delete <strong>{{ category.name }}</strong>?</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'admin_dashboard:categories_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+
+</div>
+{% endblock %}
