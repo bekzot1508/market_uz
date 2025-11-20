@@ -263,3 +263,11 @@ def category_delete(request, category_id):
 
     return render(request, "admin_dashboard/category_delete_confirm.html", {"category": category})
 
+
+
+#===============================
+#   ADMIN CATEGORIES MANAGE
+#===============================
+def users_list(request):
+    users = CustomUser.objects.all().order_by('-date_joined')
+    return render(request, "admin_dashboard/users_list.html", {"users": users})

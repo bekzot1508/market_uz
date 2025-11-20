@@ -16,6 +16,8 @@ python-dotenv = "*"
 django-jsoneditor = "*"
 django-crispy-forms = "*"
 crispy-bootstrap5 = "*"
+django-phonenumber-field = "*"
+phonenumbers = "*"
 
 [dev-packages]
 
