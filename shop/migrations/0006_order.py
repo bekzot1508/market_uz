@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('total_price', models.DecimalField(decimal_places=2, max_digits=10)),
                 ('status', models.CharField(choices=[('pending', 'Kutilmoqda'), ('confirmed', 'Tasdiqlandi'), ('shipped', 'Yuborildi'), ('delivered', 'Yetkazildi')], default='pending', max_length=20)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('css', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
     ]

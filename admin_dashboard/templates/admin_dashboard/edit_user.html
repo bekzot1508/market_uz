@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit User{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Edit User: {{ user.username }}</h2>
+
+    <div class="card shadow-sm p-3">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            {# Formni to‘liq render qilamiz #}
+            {{ form|crispy }}
+
+            <button type="submit" class="btn btn-success">Save Changes</button>
+            <a href="{% url 'admin_dashboard:users_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+
+        {# Profil rasmini alohida chiqarish #}
+        {% if user.profile_picture %}
+            <div class="mt-3">
+                <label>Current Profile Picture:</label><br>
+                <img src="{{ user.profile_picture.url }}" alt="Profile" class="img-thumbnail" width="120">
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

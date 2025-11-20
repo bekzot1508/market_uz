@@ -18,6 +18,7 @@ django-crispy-forms = "*"
 crispy-bootstrap5 = "*"
 django-phonenumber-field = "*"
 phonenumbers = "*"
+django-widget-tweaks = "*"
 
 [dev-packages]
 

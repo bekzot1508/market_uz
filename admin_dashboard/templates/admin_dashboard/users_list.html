@@ -20,7 +20,7 @@
                         <th>Phone</th>
                         <th>Joined</th>
                         <th>Role</th>
-                        <th width="160">Actions</th>
+                        <th width="200">Actions</th>
                     </tr>
                 </thead>
 
@@ -30,8 +30,8 @@
                         <td>{{ forloop.counter }}</td>
                         <td>{{ user.username }}</td>
                         <td>{{ user.email }}</td>
-                        <td>{{ user.full_name }}</td>
-                        <td>{{ user.phone }}</td>
+                        <td>{{ user.first_name }} {{ user.last_name }}</td>
+                        <td>{{ user.phone_number }}</td>
                         <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
                         <td>
                             {% if user.is_superuser %}
@@ -41,8 +41,11 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'admin_dashboard:view_user' user.id %}" class="btn btn-sm btn-info flex-fill">View</a>
+                                <a href="{% url 'admin_dashboard:edit_user' user.id %}" class="btn btn-sm btn-warning flex-fill">Edit</a>
+                                <a href="{% url 'admin_dashboard:delete_user' user.id %}" class="btn btn-sm btn-danger flex-fill">Delete</a>
+                            </div>
                         </td>
                     </tr>
                 {% empty %}

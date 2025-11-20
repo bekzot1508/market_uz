@@ -2,6 +2,8 @@ from django import forms
 from shop.models import Product, ProductImage, Category
 import json
 
+from user.models import CustomUser
+
 
 # ================= ProductForm =================
 class ProductForm(forms.ModelForm):
@@ -59,3 +61,12 @@ class CategoryForm(forms.ModelForm):
         if parent and self.instance and parent.id == self.instance.id:
             raise forms.ValidationError("O'zingizni parent qilolmaysiz.")
         return parent
+
+
+
+
+# ================= CustomUserForm =================
+class CustomUserForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'first_name', 'last_name', 'email', 'phone_number', 'profile_picture', 'is_active', 'is_superuser']

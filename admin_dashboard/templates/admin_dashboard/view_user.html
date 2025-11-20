@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}View User{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>View User: {{ user.username }}</h2>
+
+    <div class="card shadow-sm p-3">
+        <div class="row">
+            <div class="col-md-3 text-center">
+                    <img src="{{ user.profile_picture.url }}" alt="Profile" class="img-thumbnail" width="150">
+            </div>
+            <div class="col-md-9">
+                <p><strong>Full Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Phone:</strong> {{ user.phone_number }}</p>
+                <p><strong>Joined:</strong> {{ user.date_joined|date:"Y-m-d H:i" }}</p>
+                <p><strong>Role:</strong> {% if user.is_superuser %}Admin{% else %}User{% endif %}</p>
+
+                <a href="{% url 'admin_dashboard:edit_user' user.id %}" class="btn btn-warning">Edit</a>
+                <a href="{% url 'admin_dashboard:delete_user' user.id %}" class="btn btn-danger">Delete</a>
+                <a href="{% url 'admin_dashboard:users_list' %}" class="btn btn-secondary">Back</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

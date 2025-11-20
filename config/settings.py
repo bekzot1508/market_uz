@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'phonenumber_field',
+    'widget_tweaks',
 
 
 
@@ -40,6 +41,8 @@ INSTALLED_APPS = [
     'shop',
     'admin_dashboard',
 ]
+
+
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"

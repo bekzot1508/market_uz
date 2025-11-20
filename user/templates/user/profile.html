@@ -5,7 +5,7 @@
 
 {% block content %}
     <div class=" image d-flex flex-column justify-content-center align-items-center">
-        <img src="{{ user.profile_picture.url }}"   class="profile_pic rounded" alt="profile picture"/>
+        <img src="{{ user.profile_picture.url }}"   class="profile_pic rounded" alt="profile picture" width="30%"/>
         <span class="idd my-2">Username: {{ user.username }}</span>
         <span class="name">{{ user.first_name}} {{ user.last_name }}</span>
         <span class="name">{{ user.email}}</span>

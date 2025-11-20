@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from shop.models import Product, Category, Order, OrderItemSnapshot, ProductImage
 from user.models import CustomUser
-from .forms import ProductForm, ProductImageForm, CategoryForm
+from .forms import ProductForm, ProductImageForm, CategoryForm, CustomUserForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
 from django.views.decorators.http import require_POST
@@ -271,3 +271,34 @@ def category_delete(request, category_id):
 def users_list(request):
     users = CustomUser.objects.all().order_by('-date_joined')
     return render(request, "admin_dashboard/users_list.html", {"users": users})
+
+
+def edit_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    if request.method == "POST":
+        form = CustomUserForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "User updated successfully!")
+            return redirect('admin_dashboard:users_list')
+    else:
+        form = CustomUserForm(instance=user)
+    return render(request, 'admin_dashboard/edit_user.html', {'form': form, 'user': user})
+
+
+def delete_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+
+    if request.method == "POST":
+        user.delete()
+        messages.success(request, "User deleted successfully!")
+        return redirect('admin_dashboard:users_list')
+
+    # GET so‘rov bo‘lsa, tasdiqlash sahifasini ko‘rsatamiz
+    return render(request, 'admin_dashboard/delete_user.html', {'user': user})
+
+
+def view_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    return render(request, 'admin_dashboard/view_user.html', {'user': user})
+
