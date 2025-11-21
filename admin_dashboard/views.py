@@ -1,7 +1,9 @@
+import datetime
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from shop.models import Product, Category, Order, OrderItemSnapshot, ProductImage
+from shop.models import Product, Category, Order, OrderItemSnapshot, ProductImage, ProductReview
 from user.models import CustomUser
 from .forms import ProductForm, ProductImageForm, CategoryForm, CustomUserForm
 from django.contrib.admin.views.decorators import staff_member_required
@@ -302,3 +304,61 @@ def view_user(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
     return render(request, 'admin_dashboard/view_user.html', {'user': user})
 
+
+
+#===============================
+#   ADMIN CATEGORIES MANAGE
+#===============================
+# def reviews_list(request):
+#     reviews = ProductReview.objects.select_related("user", "product").order_by("-created_at")
+#     return render(request, "admin_dashboard/reviews_list.html", {"reviews": reviews})
+
+def reviews_list(request):
+    reviews = ProductReview.objects.all().order_by('-created_at')
+
+    # Filters
+    product = request.GET.get('product')
+    user = request.GET.get('user')
+    stars = request.GET.get('stars')
+    date_from = request.GET.get('from')
+    date_to = request.GET.get('to')
+    search = request.GET.get('search')
+
+    if product:
+        reviews = reviews.filter(product_id=product)
+
+    if user:
+        reviews = reviews.filter(user_id=user)
+
+    if stars:
+        reviews = reviews.filter(stars_given=stars)
+
+    if date_from:
+        reviews = reviews.filter(created_at__gte=date_from)
+
+    if date_to:
+        date_to_full = datetime.strptime(date_to, "%Y-%m-%d")
+        date_to_full = date_to_full.replace(hour=23, minute=59)
+        reviews = reviews.filter(created_at__lte=date_to_full)
+
+    if search:
+        reviews = reviews.filter(comment__icontains=search)
+
+    context = {
+        "reviews": reviews,
+        "products": Product.objects.all(),
+        "users": CustomUser.objects.all(),
+    }
+
+    return render(request, 'admin_dashboard/reviews_list.html', context)
+
+
+def delete_review(request, review_id):
+    review = get_object_or_404(ProductReview, id=review_id)
+
+    if request.method == "POST":
+        review.delete()
+        messages.success(request, "Review deleted successfully!")
+        return redirect("admin_dashboard:reviews_list")
+
+    return render(request, "admin_dashboard/delete_review.html", {"review": review})

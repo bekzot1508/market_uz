@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Moderate Reviews{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2 class="mb-4">Moderate Reviews</h2>
+
+    <h3>Search</h3>
+    <!-- FILTERS -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <form method="get" class="row g-3">
+
+                <!-- Product Filter -->
+                <div class="col-md-3">
+                    <label class="form-label">Product</label>
+                    <select name="product" class="form-select">
+                        <option value="">All</option>
+                        {% for p in products %}
+                            <option value="{{ p.id }}" {% if request.GET.product == p.id|stringformat:"s" %}selected{% endif %}>
+                                {{ p.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- User Filter -->
+                <div class="col-md-3">
+                    <label class="form-label">User</label>
+                    <select name="user" class="form-select">
+                        <option value="">All</option>
+                        {% for u in users %}
+                            <option value="{{ u.id }}" {% if request.GET.user == u.id|stringformat:"s" %}selected{% endif %}>
+                                {{ u.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Stars Filter -->
+                <div class="col-md-2">
+                    <label class="form-label">Stars</label>
+                    <select name="stars" class="form-select">
+                        <option value="">All</option>
+                        {% for i in "12345" %}
+                            <option value="{{ i }}" {% if request.GET.stars == i %}selected{% endif %}>{{ i }} ★</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date From -->
+                <div class="col-md-2">
+                    <label class="form-label">From</label>
+                    <input type="date" name="from" class="form-control" value="{{ request.GET.from }}">
+                </div>
+
+                <!-- Date To -->
+                <div class="col-md-2">
+                    <label class="form-label">To</label>
+                    <input type="date" name="to" class="form-control" value="{{ request.GET.to }}">
+                </div>
+
+                <!-- Comment Search -->
+                <div class="col-md-3">
+                    <label class="form-label">Search Comment</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search text..." value="{{ request.GET.search }}">
+                </div>
+
+                <div class="col-md-12 text-end">
+                    <button class="btn btn-primary">Apply Filters</button>
+                    <a href="{% url 'admin_dashboard:reviews_list' %}" class="btn btn-secondary">Reset</a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+
+    <div class="card shadow-sm">
+    <div class="card-body">
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Product</th>
+                        <th>User</th>
+                        <th>Stars</th>
+                        <th>Comment</th>
+                        <th>Date</th>
+                        <th width="120">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for review in reviews %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ review.product.name }}</td>
+                        <td>{{ review.user.username }}</td>
+                        <td>
+                            <span class="badge bg-warning text-dark">{{ review.stars_given }}★</span>
+                        </td>
+                        <td style="max-width:300px;">
+                            {{ review.comment|truncatechars:40 }}
+
+                            {% if review.comment|length > 40 %}
+                                <button
+                                    class="btn btn-sm btn-outline-primary view-review-btn"
+                                    data-comment="{{ review.comment|escapejs }}"
+                                    data-user="{{ review.user.username }}"
+                                    data-product="{{ review.product.name }}"
+                                    data-stars="{{ review.stars_given }}"
+                                    data-date="{{ review.created_at|date:'Y-m-d H:i' }}"
+                                >
+                                    View
+                                </button>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ review.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <a href="{% url 'admin_dashboard:delete_review' review.id %}" class="btn btn-danger btn-sm">Delete</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">
+                            No reviews yet.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+
+</div>
+
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Review Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+          <p><strong>Product:</strong> <span id="modalProduct"></span></p>
+          <p><strong>User:</strong> <span id="modalUser"></span></p>
+          <p><strong>Stars:</strong> <span id="modalStars"></span> ★</p>
+          <p><strong>Date:</strong> <span id="modalDate"></span></p>
+          <hr>
+          <p><strong>Comment:</strong></p>
+          <p id="modalComment" class="text-muted"></p>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = new bootstrap.Modal(document.getElementById("reviewModal"));
+
+    document.querySelectorAll(".view-review-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+
+            document.getElementById("modalProduct").textContent = this.dataset.product;
+            document.getElementById("modalUser").textContent = this.dataset.user;
+            document.getElementById("modalStars").textContent = this.dataset.stars;
+            document.getElementById("modalDate").textContent = this.dataset.date;
+            document.getElementById("modalComment").textContent = this.dataset.comment;
+
+            modal.show();
+        });
+    });
+});
+</script>
+
+
+{% endblock %}

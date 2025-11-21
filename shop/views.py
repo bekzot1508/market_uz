@@ -124,6 +124,7 @@ def delete_review(request, review_id):
 
 
 
+
 @staff_member_required
 def product_edit(request, product_id):
     product = get_object_or_404(Product, id=product_id)
