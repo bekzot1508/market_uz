@@ -7,57 +7,98 @@
 
     <h2 class="mb-4">Manage Users</h2>
 
+    <!-- SEARCH + FILTER PANEL -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+
+                <!-- Search -->
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Username, email, name, phone..." value="{{ request.GET.search }}">
+                </div>
+
+                <!-- Role Filter -->
+                <div class="col-md-2">
+                    <label class="form-label">Role</label>
+                    <select name="role" class="form-select">
+                        <option value="">All</option>
+                        <option value="admin" {% if request.GET.role == "admin" %}selected{% endif %}>Admin</option>
+                        <option value="user" {% if request.GET.role == "user" %}selected{% endif %}>User</option>
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if request.GET.status == "inactive" %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                    <a href="{% url 'admin_dashboard:users_list' %}" class="btn btn-secondary">Reset</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- RESPONSIVE TABLE -->
     <div class="card shadow-sm">
         <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Full Name</th>
+                            <th>Phone</th>
+                            <th>Joined</th>
+                            <th>Role</th>
+                            <th width="200">Actions</th>
+                        </tr>
+                    </thead>
 
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Full Name</th>
-                        <th>Phone</th>
-                        <th>Joined</th>
-                        <th>Role</th>
-                        <th width="200">Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                {% for user in users %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.first_name }} {{ user.last_name }}</td>
-                        <td>{{ user.phone_number }}</td>
-                        <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
-                        <td>
-                            {% if user.is_superuser %}
-                                <span class="badge bg-danger">Admin</span>
-                            {% else %}
-                                <span class="badge bg-primary">User</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="d-flex gap-1">
-                                <a href="{% url 'admin_dashboard:view_user' user.id %}" class="btn btn-sm btn-info flex-fill">View</a>
-                                <a href="{% url 'admin_dashboard:edit_user' user.id %}" class="btn btn-sm btn-warning flex-fill">Edit</a>
-                                <a href="{% url 'admin_dashboard:delete_user' user.id %}" class="btn btn-sm btn-danger flex-fill">Delete</a>
-                            </div>
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-3">
-                            No users found.
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-
+                    <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.first_name }} {{ user.last_name }}</td>
+                            <td>{{ user.phone_number }}</td>
+                            <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                {% if user.is_superuser %}
+                                    <span class="badge bg-danger">Admin</span>
+                                {% else %}
+                                    <span class="badge bg-primary">User</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <a href="{% url 'admin_dashboard:view_user' user.id %}" class="btn btn-sm btn-info flex-fill">View</a>
+                                    <a href="{% url 'admin_dashboard:edit_user' user.id %}" class="btn btn-sm btn-warning flex-fill">Edit</a>
+                                    <a href="{% url 'admin_dashboard:delete_user' user.id %}" class="btn btn-sm btn-danger flex-fill">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-3">
+                                No users found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

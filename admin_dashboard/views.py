@@ -270,9 +270,44 @@ def category_delete(request, category_id):
 #===============================
 #   ADMIN CATEGORIES MANAGE
 #===============================
+from django.shortcuts import render
+from django.db.models import Q
+from user.models import CustomUser
+
 def users_list(request):
     users = CustomUser.objects.all().order_by('-date_joined')
-    return render(request, "admin_dashboard/users_list.html", {"users": users})
+
+    # SEARCH
+    query = request.GET.get('search', '')
+    if query:
+        users = users.filter(
+            Q(username__icontains=query) |
+            Q(email__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(phone_number__icontains=query)
+        )
+
+    # ROLE FILTER
+    role = request.GET.get('role', '')
+    if role == 'admin':
+        users = users.filter(is_superuser=True)
+    elif role == 'user':
+        users = users.filter(is_superuser=False)
+
+    # STATUS FILTER
+    status = request.GET.get('status', '')
+    if status == 'active':
+        users = users.filter(is_active=True)
+    elif status == 'inactive':
+        users = users.filter(is_active=False)
+
+    context = {
+        'users': users,
+        'request': request,  # needed to keep form values
+    }
+    return render(request, "admin_dashboard/users_list.html", context)
+
 
 
 def edit_user(request, user_id):
