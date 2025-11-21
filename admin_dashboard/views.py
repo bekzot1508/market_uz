@@ -1,5 +1,3 @@
-import datetime
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
@@ -10,6 +8,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
 from django.views.decorators.http import require_POST
 from django.utils.text import slugify
+from django.core.paginator import Paginator
+from datetime import datetime
 import json
 
 
@@ -37,9 +37,45 @@ def dashboard_home(request):
 # ================= Products LIST =================
 @login_required
 @user_passes_test(staff_required)
+
+
 def admin_products_list(request):
     products = Product.objects.all().order_by('-created_at')
-    return render(request, 'admin_dashboard/products_list.html', {'products': products})
+    categories = Category.objects.all()
+
+    # Filters
+    category = request.GET.get('category')
+    is_active = request.GET.get('is_active')
+    stock = request.GET.get('stock')
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+    search = request.GET.get('search')
+
+    if category:
+        products = products.filter(category_id=category)
+    if is_active in ['0', '1']:
+        products = products.filter(is_active=bool(int(is_active)))
+    if stock == '0':
+        products = products.filter(stock=0)
+    elif stock == '1':
+        products = products.filter(stock__gt=0)
+    if min_price:
+        products = products.filter(price__gte=min_price)
+    if max_price:
+        products = products.filter(price__lte=max_price)
+    if search:
+        products = products.filter(name__icontains=search)
+
+    # Pagination
+    paginator = Paginator(products, 15)  # 10 ta product per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'admin_dashboard/products_list.html', {
+        'products': page_obj,
+        'categories': categories
+    })
+
 
 
 
@@ -348,10 +384,11 @@ def view_user(request, user_id):
 #     reviews = ProductReview.objects.select_related("user", "product").order_by("-created_at")
 #     return render(request, "admin_dashboard/reviews_list.html", {"reviews": reviews})
 
+
+
 def reviews_list(request):
     reviews = ProductReview.objects.all().order_by('-created_at')
 
-    # Filters
     product = request.GET.get('product')
     user = request.GET.get('user')
     stars = request.GET.get('stars')
@@ -379,13 +416,21 @@ def reviews_list(request):
     if search:
         reviews = reviews.filter(comment__icontains=search)
 
+    paginator = Paginator(reviews, 5)  # 5 review per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        "reviews": reviews,
+        "reviews": page_obj,
         "products": Product.objects.all(),
         "users": CustomUser.objects.all(),
+        "request_get": request.GET.copy(),  # pagination linklar uchun
     }
 
     return render(request, 'admin_dashboard/reviews_list.html', context)
+
+
+
 
 
 def delete_review(request, review_id):
