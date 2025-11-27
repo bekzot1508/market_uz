@@ -33,6 +33,10 @@ urlpatterns = [
     path("reviews/", views.reviews_list, name="reviews_list"),
     path("reviews/delete/<int:review_id>/", views.delete_review, name="delete_review"),
 
+    # manate store
+    path("settings/", views.store_settings, name="store_settings"),
+
+
     # path("orders", views.orders_list, name="orders_list"),
     # path("orders/<int:order_id>/", views.order_detail, name="order_detail"),
     # path("orders/<int:order_id>/delete/", views.order_delete, name="order_delete"),

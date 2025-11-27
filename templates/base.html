@@ -60,7 +60,7 @@
     .dropdown-submenu .dropdown-toggle::after {
       transform: rotate(-45deg);
       margin-top: 0.25rem;
-    }
+
   </style>
 </head>
 <body>
@@ -109,9 +109,11 @@
           {% endif %}
 
           <!-- Dashboard Links -->
-          <li class="nav-item ms-2"><a class="nav-link" href="{% url 'shop:admin_dashboard' %}"><i class="fa fa-tachometer-alt"></i> Dashboard</a></li>
+          {% if user.is_staff %}
           <li class="nav-item ms-2"><a class="nav-link" href="{% url 'admin_dashboard:dashboard_home' %}"><i class="fa fa-cogs"></i> Admin</a></li>
+          {% endif %}
           <li class="nav-item ms-2"><a class="nav-link" href="{% url 'shop:my_orders' %}"><i class="fa fa-box"></i> My Orders</a></li>
+
         </ul>
       </div>
     </div>

@@ -35,11 +35,14 @@
 
             <p>⭐ {{ product.average_rating }} ({{ product.review_count }} reviews)</p>
 
-            <a href="{% url 'shop:add_to_cart' product.id %}" class="btn btn-success mb-2">Add to cart</a>
+            {% if product.stock > 0 %}
+                <a href="{% url 'shop:add_to_cart' product.id %}" class="btn btn-success mb-2">Savatga qo'shish</a>
+            {% else %}
+                 <a href="" class="btn btn-info mb-2">Bazada yo'q ❌</a>
+            {% endif %}
+            <a href="{% url 'home' %}" class="btn btn-secondary mb-2">← Ortga</a>
 
             {% if user.is_staff %}
-                <a href="{% url 'shop:product_edit' product.id %}" class="btn btn-warning mb-2">Edit</a>
-                <a href="{% url 'shop:product_delete' product.id %}" class="btn btn-danger mb-2">Delete</a>
                 <a href="{% url 'admin_dashboard:products_list' %}" class="btn btn-primary mb-2">Manage Products</a>
             {% endif %}
         </div>

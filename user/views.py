@@ -4,8 +4,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.views import View
-
 from user.forms import UserCreateForm, UserUpdateForm
+from django.contrib.auth.views import PasswordChangeView, PasswordChangeDoneView
+from django.urls import reverse_lazy
 
 
 # Create your views here.
@@ -83,3 +84,17 @@ class ProfileUpdateView(LoginRequiredMixin, View):
             messages.success(request, 'You have been successfully updated your profile.')
             return redirect('user:profile')
         return render(request,'user/profile_edit.html', {'form': user_update_form})
+
+
+
+
+
+
+class MyPasswordChangeView(PasswordChangeView):
+    template_name = 'user/password_change.html'
+    success_url = reverse_lazy('user:password_change_done')
+
+
+class MyPasswordChangeDoneView(PasswordChangeDoneView):
+    template_name = 'user/password_change_done.html'
+

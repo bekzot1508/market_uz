@@ -5,6 +5,37 @@ from django.utils.text import slugify
 from user.models import CustomUser
 
 
+class StoreSettings(models.Model):
+    store_name = models.CharField(max_length=200, default="My Store")
+    contact_email = models.EmailField(blank=True)
+    contact_phone = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+
+    # Home content
+    homepage_title = models.CharField(max_length=255, blank=True)
+    homepage_subtitle = models.CharField(max_length=255, blank=True)
+    homepage_banner = models.ImageField(upload_to='settings/', blank=True, null=True)
+
+    # Order settings
+    free_delivery_min = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    minimum_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    # General
+    maintenance_mode = models.BooleanField(default=False)  # site ni vaqtincha o‘chirish
+    items_per_page = models.PositiveIntegerField(default=12)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "Store Settings"
+
+    class Meta:
+        verbose_name = "Store Settings"
+        verbose_name_plural = "Store Settings"
+
+
+
+
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='subcategories')

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Order #{{ order.id }}</h2>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5>Status: 
+                <span class="badge 
+                    {% if order.status == 'pending' %}bg-warning
+                    {% elif order.status == 'confirmed' %}bg-primary
+                    {% elif order.status == 'shipped' %}bg-info
+                    {% elif order.status == 'delivered' %}bg-success
+                    {% endif %}
+                ">{{ order.get_status_display }}</span>
+            </h5>
+            <p><strong>Placed at:</strong> {{ order.created_at|date:"d M Y H:i" }}</p>
+            <p><strong>Total:</strong> ${{ order.total_price }}</p>
+            <p><strong>Shipping to:</strong> {{ order.full_name }}, {{ order.address }}, {{ order.phone }}</p>
+            {% if order.note %}
+                <p><strong>Note:</strong> {{ order.note }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <h4 class="mb-3">Items</h4>
+    <div class="row">
+        {% for item in snapshots %}
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow-sm">
+                    <img src="{{ item.image }}" class="card-img-top" alt="{{ item.name }}" style="height:200px; object-fit:cover;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.name }}</h5>
+                        <p class="card-text">Price: ${{ item.price }} <br> Quantity: {{ item.quantity }}</p>
+                        <p class="card-text"><strong>Subtotal: ${{ item.price|floatformat:2|add:item.quantity|floatformat:2 }}</strong></p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <a href="{% url 'shop:my_orders' %}" class="btn btn-secondary mt-4">Back to Orders</a>
+</div>
+{% endblock %}

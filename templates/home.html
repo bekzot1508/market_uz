@@ -68,7 +68,7 @@
               {% if product.stock > 0 %}
                 <p class="card-text fw-bold mb-2">{{ product.get_discounted_price }} $</p>
               {% else %}
-                <p class="text-danger fw-bold mb-2">Stockda yo‘q</p>
+                <p class="text-danger fw-bold mb-2">Bazada yo‘q</p>
               {% endif %}
 
               <div class="mb-2 rating" data-rating="{{ product.average_rating }}">
@@ -86,10 +86,16 @@
                 {% endif %}
               {% endwith %}
 
-              <a href="{% url 'shop:add_to_cart' product.id %}" class="btn btn-warning mt-auto">
-                <i class="fa fa-cart-plus me-1"></i> Savatga qo‘shish
-              </a>
-              <p class="text-muted mt-1">Stock: {{ product.stock }}</p>
+              {% if product.stock > 0 %}
+                <a href="{% url 'shop:add_to_cart' product.id %}" class="btn btn-warning mt-auto">
+                  <i class="fa fa-cart-plus me-1"></i> Savatga qo‘shish
+                </a>
+              {% else %}
+                 <a href="" class="btn btn-warning mt-auto">
+                    <i class="fa fa-cart-plus me-1"></i> mavjud emas ❌
+                 </a>
+              {% endif %}
+              <p class="mt-1 {% if product.stock == 0 %}text-danger{% else %}text-muted{% endif %}">Stock: {{ product.stock }}</p>
             </div>
           </div>
         </div>

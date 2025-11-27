@@ -1,12 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 
-from .forms import CheckoutAddressForm, ProductForm
+from .forms import CheckoutAddressForm
 from .models import Product, Category, Order, OrderItemSnapshot, ProductReview
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
+from django.core.paginator import Paginator
 
 
 
@@ -125,33 +126,6 @@ def delete_review(request, review_id):
 
 
 
-@staff_member_required
-def product_edit(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-
-    if request.method == "POST":
-        form = ProductForm(request.POST, request.FILES, instance=product)
-        if form.is_valid():
-            form.save()
-            return redirect('shop:product_detail', slug=product.slug)
-    else:
-        form = ProductForm(instance=product)
-
-    return render(request, 'shop/product_edit.html', {'form': form, 'product': product})
-
-
-@staff_member_required
-def product_delete(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-
-    if request.method == "POST":
-        product.delete()
-        return redirect('home')
-
-    return render(request, 'shop/product_delete.html', {'product': product})
-
-
-
 #############  CART #############
 
 def cart_view(request):
@@ -197,7 +171,9 @@ def checkout_address(request):
     if request.method == "POST":
         form = CheckoutAddressForm(request.POST)
         if form.is_valid():
-            request.session['checkout_address'] = form.cleaned_data
+            data = form.cleaned_data
+            data["phone"] = str(data["phone"])  # ← MUHIM: JSON uchun string qilish
+            request.session['checkout_address'] = data
             return redirect('shop:checkout_confirm')
     else:
         form = CheckoutAddressForm()
@@ -205,7 +181,14 @@ def checkout_address(request):
     return render(request, 'shop/checkout_address.html', {"form": form})
 
 
+from django.db import transaction
+from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
+from shop.models import Product, Order, OrderItemSnapshot
+
+
 @login_required
+@transaction.atomic  # ❗ xavfsiz sotib olish uchun
 def checkout_confirm(request):
     cart = request.session.get('cart', {})
     address = request.session.get('checkout_address', {})
@@ -213,14 +196,29 @@ def checkout_confirm(request):
     if not cart or not address:
         return redirect('shop:checkout_address')
 
-    products = Product.objects.filter(id__in=cart.keys())
+    # ❗ SELECT FOR UPDATE → productni locklaydi (zapasni to‘g‘ri kamaytiradi)
+    products = Product.objects.select_for_update().filter(id__in=cart.keys())
 
+    # ❗ Har product bo‘yicha yetarli stock bormi, tekshiramiz
+    for p in products:
+        qty = cart[str(p.id)]
+        if p.stock < qty:
+            return render(request, "shop/checkout_confirm.html", {
+                "products": products,
+                "cart": cart,
+                "address": address,
+                "total": 0,
+                "error": f"{p.name} yetarli emas! Omborda: {p.stock} ta",
+            })
+
+    # ❗ Total price
     total = sum(
         p.get_discounted_price() * cart[str(p.id)]
         for p in products
     )
 
     if request.method == "POST":
+        # 1️⃣ Order yaratamiz
         order = Order.objects.create(
             user=request.user,
             items=cart,
@@ -231,18 +229,23 @@ def checkout_confirm(request):
             note=address.get('note', '')
         )
 
-        # 📌 SNAPSHOT YARATAMIZ
+        # 2️⃣ Stockni kamaytirish (asosiy joy)
         for p in products:
+            qty = cart[str(p.id)]
+            p.stock -= qty          # kamaytirish
+            p.save()                # ❗ saqlash shart
+
+            # 3️⃣ Snapshot yaratish
             snap = OrderItemSnapshot.objects.create(
                 product_id=p.id,
                 name=p.name,
-                image=p.image.url if p.image else "no_image.jpg",
+                image=p.image.url if p.image else "",
                 price=p.get_discounted_price(),
-                quantity=cart[str(p.id)]
+                quantity=qty
             )
             order.snapshots.add(snap)
 
-        # savatni tozalaymiz
+        # 4️⃣ Savatni tozalash
         request.session['cart'] = {}
         request.session['checkout_address'] = {}
 
@@ -257,58 +260,77 @@ def checkout_confirm(request):
 
 
 
-#############  ADMIN #############
 
-@staff_member_required
-def admin_dashboard(request):
-    query = request.GET.get('q', '')
-    status_filter = request.GET.get('status', '')
+#############  MY ORDERS #############
+@login_required
+def my_orders(request):
+    orders_list = Order.objects.filter(user=request.user).order_by('-created_at')
+    paginator = Paginator(orders_list, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
-    orders = Order.objects.all().order_by('-created_at')
+    orders_data = []
+    for order in page_obj:
+        items_info = []
+        for product_id_str, quantity in order.items.items():
+            try:
+                product = Product.objects.get(id=int(product_id_str))
+                items_info.append({
+                    "deleted": False,
+                    "product": product,
+                    "quantity": quantity
+                })
+            except Product.DoesNotExist:
+                items_info.append({
+                    "deleted": True,
+                    "product": None,
+                    "quantity": quantity,
+                    "product_id": product_id_str
+                })
 
-    if query:
-        orders = orders.filter(
-            Q(user__username__icontains=query) |
-            Q(id__icontains=query)
-        )
-    if status_filter:
-        orders = orders.filter(status=status_filter)
+        orders_data.append({
+            "order": order,
+            "items": items_info,
+            "total_items": sum(i["quantity"] for i in items_info)
+        })
 
-    return render(request, 'shop/admin_dashboard.html', {
-        'orders': orders,
-        'query': query,
-        'status_filter': status_filter,
+    return render(request, 'shop/my_orders.html', {
+        "orders_data": orders_data,
+        "page_obj": page_obj
     })
 
 
-@staff_member_required
-@require_POST
-def update_order_status(request, order_id):
-    order = Order.objects.get(id=order_id)
-    new_status = request.POST.get('status')
-    if new_status in dict(Order.STATUS_CHOICES):
-        order.status = new_status
-        order.save()
-    return redirect('shop:admin_dashboard')
-
-
-
-#############  MY ORDERS #############
-
-@login_required
-def my_orders(request):
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'shop/my_orders.html', {"orders": orders})
 
 
 @login_required
 def checkout_success(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
-    snapshots = order.snapshots.all()
 
-    return render(request, 'shop/checkout_success.html', {
+    items_info = []
+    for product_id_str, quantity in order.items.items():
+        try:
+            product = Product.objects.get(id=int(product_id_str))
+            items_info.append({
+                "deleted": False,
+                "product": product,
+                "quantity": quantity
+            })
+        except Product.DoesNotExist:
+            items_info.append({
+                "deleted": True,
+                "product": None,
+                "quantity": quantity,
+                "product_id": product_id_str
+            })
+
+    total_items = sum(i["quantity"] for i in items_info)
+
+    return render(request, "shop/checkout_success.html", {
         "order": order,
-        "snapshots": snapshots
+        "items": items_info,
+        "total_items": total_items
     })
+
+
 
 

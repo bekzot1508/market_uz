@@ -150,4 +150,9 @@ STATICFILES_FINDERS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = 'user:login'  # login_requared dekarator login sahifasiga yuboradi
+LOGIN_URL = 'user:login'
+LOGIN_REDIRECT_URL = 'user:profile'
+LOGOUT_REDIRECT_URL = 'user:login'
+
+PASSWORD_CHANGE_REDIRECT_URL = 'user:password_change_done'
+

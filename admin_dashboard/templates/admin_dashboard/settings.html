@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Store Settings{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Store Settings</h2>
+    <p class="text-muted mb-4">Configure store general settings.</p>
+
+    <form method="POST" enctype="multipart/form-data" class="card p-4 shadow-sm">
+        {% csrf_token %}
+
+        <h4 class="mb-3">General</h4>
+
+        <div class="mb-3">
+            <label>Store Name</label>
+            <input type="text" name="store_name" class="form-control"
+                   value="{{ settings.store_name }}">
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Contact Email</label>
+                <input type="email" name="contact_email" class="form-control"
+                       value="{{ settings.contact_email }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Contact Phone</label>
+                <input type="text" name="contact_phone" class="form-control"
+                       value="{{ settings.contact_phone }}">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label>Store Address</label>
+            <textarea name="address" class="form-control">{{ settings.address }}</textarea>
+        </div>
+
+
+        <hr>
+        <h4 class="mb-3">Homepage Settings</h4>
+
+        <div class="mb-3">
+            <label>Homepage Title</label>
+            <input type="text" name="homepage_title" class="form-control"
+                   value="{{ settings.homepage_title }}">
+        </div>
+
+        <div class="mb-3">
+            <label>Homepage Subtitle</label>
+            <input type="text" name="homepage_subtitle" class="form-control"
+                   value="{{ settings.homepage_subtitle }}">
+        </div>
+
+        <div class="mb-3">
+            <label>Homepage Banner</label>
+            {% if settings.homepage_banner %}
+                <div>
+                    <img src="{{ settings.homepage_banner.url }}" width="200" class="mb-2">
+                </div>
+            {% endif %}
+            <input type="file" name="homepage_banner" class="form-control">
+        </div>
+
+
+        <hr>
+        <h4 class="mb-3">Order Settings</h4>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Free Delivery Minimum Amount</label>
+                <input type="number" name="free_delivery_min" step="0.01" class="form-control"
+                       value="{{ settings.free_delivery_min }}">
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label>Minimum Order Amount</label>
+                <input type="number" name="minimum_order_amount" step="0.01" class="form-control"
+                       value="{{ settings.minimum_order_amount }}">
+            </div>
+        </div>
+
+
+        <hr>
+        <h4 class="mb-3">System</h4>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="maintenance_mode"
+                   {% if settings.maintenance_mode %}checked{% endif %}>
+            <label class="form-check-label">Maintenance Mode</label>
+        </div>
+
+        <div class="mb-3">
+            <label>Items Per Page</label>
+            <input type="number" name="items_per_page" class="form-control"
+                   value="{{ settings.items_per_page }}">
+        </div>
+
+        <button class="btn btn-primary w-100">Save Settings</button>
+    </form>
+</div>
+{% endblock %}

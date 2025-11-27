@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from shop.models import Product, Category, Order, OrderItemSnapshot, ProductImage, ProductReview
+from shop.models import Product, Category, Order, OrderItemSnapshot, ProductImage, ProductReview, StoreSettings
 from user.models import CustomUser
 from .forms import ProductForm, ProductImageForm, CategoryForm, CustomUserForm
 from django.contrib.admin.views.decorators import staff_member_required
@@ -442,3 +442,38 @@ def delete_review(request, review_id):
         return redirect("admin_dashboard:reviews_list")
 
     return render(request, "admin_dashboard/delete_review.html", {"review": review})
+
+
+
+
+#===============================
+#   ADMIN CATEGORIES MANAGE
+#===============================
+def store_settings(request):
+    settings, created = StoreSettings.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        settings.store_name = request.POST.get("store_name")
+        settings.contact_email = request.POST.get("contact_email")
+        settings.contact_phone = request.POST.get("contact_phone")
+        settings.address = request.POST.get("address")
+
+        settings.homepage_title = request.POST.get("homepage_title")
+        settings.homepage_subtitle = request.POST.get("homepage_subtitle")
+
+        settings.free_delivery_min = request.POST.get("free_delivery_min") or 0
+        settings.minimum_order_amount = request.POST.get("minimum_order_amount") or 0
+
+        settings.maintenance_mode = "maintenance_mode" in request.POST
+        settings.items_per_page = request.POST.get("items_per_page") or 12
+
+        # Banner image
+        if "homepage_banner" in request.FILES:
+            settings.homepage_banner = request.FILES["homepage_banner"]
+
+        settings.save()
+        return redirect("admin_dashboard:store_settings")
+
+    return render(request, "admin_dashboard/settings.html", {
+        "settings": settings
+    })

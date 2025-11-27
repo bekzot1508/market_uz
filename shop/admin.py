@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django import forms
-from .models import Product, Category, Order, ProductImage
+from .models import Product, Category, Order, ProductImage, StoreSettings
+
 
 # Inline for product images
 class ProductImageInline(admin.TabularInline):
@@ -67,3 +68,6 @@ class OrderAdmin(admin.ModelAdmin):
         return f"Order #{obj.id} — {obj.user.username} — {', '.join(items)}"
 
     order_title.short_description = "Order"
+
+
+admin.site.register(StoreSettings)

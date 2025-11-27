@@ -10,12 +10,22 @@
 
   {% if products %}
     {% for product in products %}
-      <p>{{ product.name }} — {{ cart|get_item:product.id }} x {{ product.get_discounted_price }} $</p>
-      <a class="btn btn-info" href="{% url 'shop:remove_from_cart' product.id %}">Remove</a>
+       <div class="d-flex align-items-center w-100 mt-3">
+          <img src="{{ product.image.url }}"
+               class="rounded"
+               style="width:55px; height:55px; object-fit:cover;">
+          <div class="ms-3">
+              <h6 class="fw-bold mb-1 text-dark">Nomi:  {{ product.name }}</h6>
+              <p class="mb-0 text-muted">Soni: {{ cart|get_item:product.id }}</p>
+              <p class="text-muted">Narxi: {{ product.get_discounted_price }} So'm</p>
+          </div>
+       </div>
+      <a class="btn btn-info" href="{% url 'shop:remove_from_cart' product.id %}">Savatchadan o'chirish</a>
     {% endfor %}
     <hr>
     <h3>Total: {{ total }} $</h3>
-    <a class="btn btn-success" href="{% url 'shop:checkout_address' %}">Checkout</a>
+    <a class="btn btn-success" href="{% url 'shop:checkout_address' %}">Sotib olish</a>
+    <a class="btn btn-warning" href="{% url 'home' %}">Ortga qaytish</a>
   {% else %}
     <p>Your cart is empty.</p>
   {% endif %}

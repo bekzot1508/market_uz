@@ -1,35 +1,63 @@
-{% extends 'base.html' %}
-{% load product_extras %}
+{% extends "base.html" %}
 
-{% block title %} Order Successful {% endblock %}
+{% block title %}Order Successful{% endblock %}
 
 {% block content %}
-  <h2>Buyurtma muvaffaqiyatli yakunlandi!</h2>
+<div class="container py-5">
+    <div class="card shadow-sm rounded-4 p-4" style="background: #f8f9fa;">
+        <h2 class="fw-bold mb-3">🎉 Order Successful!</h2>
 
-  <h3>Buyurtma raqami: #{{ order.id }}</h3>
-  <p>Sana: {{ order.created_at }}</p>
+        <p><strong>Order ID:</strong> #{{ order.id }}</p>
+        <p><strong>Foydalanuvchi:</strong> {{ order.user.username }}</p>
+        <p><strong>Ism:</strong> {{ order.full_name }}</p>
+        <p><strong>Telefon:</strong> {{ order.phone }}</p>
+        <p><strong>Manzil:</strong> {{ order.address }}</p>
+        {% if order.note %}<p><strong>Izoh:</strong> {{ order.note }}</p>{% endif %}
+        <p><strong>Status:</strong>
+            <span class="badge px-3 py-2 text-light"
+                  style="background:
+                    {% if order.status == 'pending' %}#ffc107
+                    {% elif order.status == 'confirmed' %}#007bff
+                    {% elif order.status == 'shipped' %}#17a2b8
+                    {% elif order.status == 'delivered' %}#28a745
+                    {% else %}#6c757d{% endif %};">
+                {{ order.get_status_display }}
+            </span>
+        </p>
+        <p><strong>Sanasi:</strong> {{ order.created_at|date:"d.m.Y, H:i" }}</p>
+        <p><strong>Jami:</strong> {{ order.total_price }} So'm</p>
+        <p><strong>Total Items:</strong> {{ total_items }}</p>
 
-  <hr>
+        <h4 class="mt-4 fw-bold">Ordered Products</h4>
+        <ul class="list-group list-group-flush">
+            {% for i in items %}
+                <li class="list-group-item d-flex align-items-center gap-3 p-2 my-1 rounded-3"
+                    style="background: rgba(255,255,255,0.9);">
+                    {% if not i.deleted %}
+                        <img src="{{ i.product.image.url }}"
+                             class="rounded"
+                             style="width:60px; height:60px; object-fit:cover;">
+                        <div>
+                            <h6 class="fw-bold mb-1"><a href="{% url 'shop:product_detail' i.product.slug %}">{{ i.product.name }}</a></h6>
+                            <p class="mb-0 text-muted">Soni: {{ i.quantity }}</p>
+                            <p class="mb-0 text-muted">Narxi: {{ i.product.get_discounted_price }} So'm</p>
+                        </div>
+                    {% else %}
+                        <div>
+                            <h5 class="fst-italic text-danger">Bu mahsulot Bazada vaqtincha Mavjud emas</h5>
+                            <h6 class="fw-bold mb-1">{{ i.product.name }}</h6>
+                            <p class="mb-0 text-muted">Soni: {{ i.quantity }}</p>
+                            <p class="mb-0 text-muted">Narxi: {{ order.products_set.all}} So'm</p>
+                        </div>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
 
-  <h3>Mahsulotlar:</h3>
-
-  {% for item in snapshots %}
-  <div style="display:flex; align-items:center; margin-bottom:10px; opacity:0.6;">
-      <img src="{{ item.image }}" width="70" style="border-radius:5px; margin-right:10px;">
-      <div>
-          <p style="margin:0;">
-              {{ item.name }}
-              <span style="color:gray;">(o‘chirilgan mahsulot)</span>
-          </p>
-          <small>{{ item.quantity }} x {{ item.price }} so‘m</small>
-      </div>
-  </div>
-  {% endfor %}
-
-  <hr>
-
-  <h3>Umumiy summa: {{ order.total_price }} so‘m</h3>
-
-  <a href="{% url 'shop:my_orders' %}" class="btn btn-primary">Mening buyurtmalarim</a>
-
+        <a href="{% url 'shop:my_orders' %}"
+           class="btn btn-dark mt-4 w-100 fw-bold">
+            ← Back to Orders
+        </a>
+    </div>
+</div>
 {% endblock %}

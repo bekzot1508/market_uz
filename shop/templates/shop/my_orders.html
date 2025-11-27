@@ -1,42 +1,103 @@
-{% extends 'base.html' %}
-{% load product_extras %}
-
+{% extends "base.html" %}
 
 {% block title %}My Orders{% endblock %}
 
 {% block content %}
+<div class="container py-5">
+    <h2 class="mb-4 fw-bold">🛒 My Orders</h2>
 
-<h2>Mening buyurtmalarim</h2>
+    {% if orders_data %}
+        <div class="row g-4">
+            {% for block in orders_data %}
+                {% with order=block.order items=block.items %}
+                <div class="col-md-6">
+                    <div class="card shadow-sm rounded-4 p-3 hover-shadow"
+                         style="transition: 0.3s; background: #f8f9fa;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="fw-bold">Order #{{ order.id }}</h5>
+                            <span class="badge px-3 py-2 text-light rounded-3"
+                                  style="background:
+                                    {% if order.status == 'pending' %}#ffc107
+                                    {% elif order.status == 'confirmed' %}#007bff
+                                    {% elif order.status == 'shipped' %}#17a2b8
+                                    {% elif order.status == 'delivered' %}#28a745
+                                    {% else %}#6c757d{% endif %};">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
 
-    {% for order in orders %}
-    <div style="border:1px solid #ccc; padding:15px; margin-bottom:15px; border-radius:10px;">
+                        <p class="text-muted mb-2">Total: <b>${{ order.total_price }}</b></p>
+                        <p class="text-muted mb-2">Items: <b>{{ block.total_items }}</b></p>
 
-        <h4>Buyurtma #{{ order.id }}</h4>
-        <p>Status: <strong>{{ order.get_status_display }}</strong></p>
-        <p>Sana: {{ order.created_at }}</p>
+                        <ul class="list-group list-group-flush">
+                            {% for i in items %}
+                                <li class="list-group-item d-flex align-items-center gap-3 p-2 my-1 rounded-3"
+                                    style="background: rgba(255,255,255,0.9); transition:0.2s;">
+                                    {% if not i.deleted %}
+                                        <div class="d-flex align-items-center w-100">
+                                            <img src="{{ i.product.image.url }}"
+                                                 class="rounded"
+                                                 style="width:55px; height:55px; object-fit:cover;">
+                                            <div class="ms-2">
+                                                <h6 class="fw-bold mb-1 text-dark">{{ i.product.name }}</h6>
+                                                <p class="mb-0 text-muted">Soni: {{ i.quantity }}</p>
+                                                <p class="mb-0 text-muted">Narxi: {{ i.product.get_discounted_price }} So'm</p>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="d-flex align-items-center w-100 opacity-75">
+                                            <div class="rounded bg-light text-center"
+                                                 style="width:55px; height:55px; display:flex;align-items:center;justify-content:center;">
+                                                ❌
+                                            </div>
+                                            <div class="ms-3">
+                                                <h5 class="fst-italic text-danger">Bu mahsulot Bazada vaqtincha mavjud emas!</h5>
+                                                <h6 class="fw-bold text-danger mb-1">Deleted Product</h6>
+                                                <p class="mb-0 text-muted">ID: {{ i.product_id }}</p>
+                                                <p class="mb-0 text-muted">Soni: {{ i.quantity }} So'm</p>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
 
-        <h5>Mahsulotlar:</h5>
-
-        {% for item in order.snapshots.all %}
-            <div style="display:flex; align-items:center; opacity:0.6; margin-bottom:8px;">
-                <img src="{{ item.image }}" width="60" style="border-radius:4px; margin-right:10px;">
-                <div>
-                    <p style="margin:0;">
-                        {{ item.name }}
-                        <span style="color:gray;">(o‘chirilgan product)</span>
-                    </p>
-                    <small>{{ item.quantity }} x {{ item.price }} so‘m</small>
+                        <a href="{% url 'shop:checkout_success' order.id %}"
+                           class="btn btn-dark mt-3 w-100 fw-bold">
+                            View Details →
+                        </a>
+                    </div>
                 </div>
-            </div>
-        {% endfor %}
+                {% endwith %}
+            {% endfor %}
+        </div>
 
-        <p><strong>Jami: {{ order.total_price }} so‘m</strong></p>
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
 
-        <a href="{% url 'shop:checkout_success' order.id %}" class="btn btn-sm btn-secondary">
-            To‘liq ko‘rish
-        </a>
-    </div>
-    {% endfor %}
+    {% else %}
+        <p class="text-center text-muted">You have no orders yet.</p>
+    {% endif %}
+</div>
 
+<style>
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15)!important;
+    transform: translateY(-3px);
+}
+</style>
 
 {% endblock %}

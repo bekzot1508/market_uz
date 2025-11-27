@@ -6,11 +6,11 @@ register = template.Library()
 
 @register.filter
 def get_product(product_id):
-    """ID orqali product obyektini qaytaradi"""
     try:
-        return Product.objects.get(id=product_id)
-    except Product.DoesNotExist:
+        return Product.objects.get(id=int(product_id))
+    except (Product.DoesNotExist, ValueError, TypeError):
         return None
+
 
 @register.filter
 def to_int(value):
